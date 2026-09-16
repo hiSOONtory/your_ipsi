@@ -1,0 +1,2244 @@
+<title>2028 진학지도 도구</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#ffffff; --border:#dfe3e8; --text:#1c2128; --muted:#5b6472;
+    --accent:#2554c7; --accent-light:#eaf0ff; --good:#1a7f37; --good-bg:#e9f7ee;
+    --bad:#c22b2b; --bad-bg:#fdecec; --warn:#9a6700; --warn-bg:#fff6e0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    font-size:14px;line-height:1.55}
+  h1,h2,h3{margin:0 0 8px}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px}
+  .banner{background:#111827;color:#fff;padding:10px 20px;font-size:13px;text-align:center}
+  .banner b{color:#ffd666}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px}
+  .panel h2{font-size:16px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+  textarea,input[type=text],input[type=number],input[type=password],select{
+    width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;
+    font-family:inherit;background:#fff;color:var(--text)}
+  textarea{min-height:110px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:140px}
+  #mockGradeInputs>div{min-width:0}
+  button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:9px 16px;
+    font-size:13px;cursor:pointer;font-weight:600}
+  button.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  button.danger{background:#fff;color:var(--bad);border:1px solid var(--bad)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700}
+  .pill.ok{background:var(--good-bg);color:var(--good)}
+  .pill.no{background:var(--bad-bg);color:var(--bad)}
+  .pill.na{background:#eee;color:#666}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{border:1px solid var(--border);padding:6px 8px;text-align:left}
+  th{background:#f1f3f6;cursor:pointer;user-select:none}
+  th.sorted::after{content:' ▾';font-size:10px}
+  .muted{color:var(--muted)}
+  .err{color:var(--bad);font-size:12.5px;margin-top:6px}
+  .ok-msg{color:var(--good);font-size:12.5px;margin-top:6px}
+  .tag{font-size:11px;background:var(--accent-light);color:var(--accent);border-radius:5px;padding:2px 7px}
+
+  /* ===== 탭 네비게이션 ===== */
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;border-bottom:2px solid var(--border)}
+  .tabs button{background:none;color:var(--muted);border:none;border-radius:0;padding:10px 14px;font-weight:700;border-bottom:3px solid transparent}
+  .tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* ===== 개별 상담 결과지 ===== */
+  .sheet{background:#fff;border:1px solid var(--border);border-radius:10px;padding:22px}
+  .sheet .head{display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:2px solid var(--text);padding-bottom:10px;margin-bottom:14px}
+  .sheet .head .id{font-size:20px;font-weight:800}
+  .sheet .head .summary{font-size:13px;color:var(--muted);margin-top:2px}
+  .sheet .bignum{font-size:15px;font-weight:700}
+  .sect{margin-bottom:16px}
+  .sect>h3{font-size:13.5px;color:var(--accent);border-left:4px solid var(--accent);padding-left:8px;margin-bottom:8px}
+  .gatebox{display:flex;gap:10px;flex-wrap:wrap}
+  .gateitem{border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:150px}
+  .univcard{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+  .univcard .name{font-weight:700}
+  .univcard .score{float:right;font-weight:700;color:var(--accent)}
+  .univcard .note{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .reminder{background:var(--accent-light);border-radius:8px;padding:10px 14px;font-size:12px;color:#1a3a8f}
+  .reminder li{margin:2px 0}
+  .footdisc{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;border-top:1px solid var(--border);padding-top:8px}
+  .gradebox{border:1px solid var(--accent);background:var(--accent-light);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12.5px}
+
+  @media print{
+    body{background:#fff}
+    .no-print{display:none !important}
+    .wrap{max-width:none;padding:0}
+    .sheet{border:none;padding:0}
+    .screen{display:none !important}
+    .screen.active{display:block !important}
+    @page{size:A4;margin:14mm}
+  }
+</style>
+
+<div id="appRoot">
+  <div class="banner no-print">
+    교사용 참고 도구 · 공식 합불 예측 아님
+  </div>
+
+  <div class="wrap">
+    <div class="no-print">
+      <h1>2028 대입 진학지도 도구 <span class="tag">v1.0</span></h1>
+
+      <nav class="tabs">
+        <button data-screen="grades" class="active">① 성적입력</button>
+        <button data-screen="batch">② 반 전체</button>
+        <button data-screen="consult">③ 개별상담</button>
+        <button data-screen="stats">④ 학교통계(교사용)</button>
+      </nav>
+    </div>
+
+    <!-- ============ ① 성적입력 ============ -->
+    <div class="screen active no-print" id="screen-grades">
+      <div class="panel" style="background:var(--accent-light);border-color:var(--accent)">
+        <h2 style="border:none">🔍 샘플 데이터로 미리보기</h2>
+        <p class="hint">아직 실제 성적 파일이 없어도, 예시 편제표·학생 2명 데이터를 채워서 반 전체·개별상담 화면이 어떻게 나오는지 바로 확인할 수 있습니다. (기존 데이터가 있으면 덮어씁니다)</p>
+        <div class="btnbar">
+          <button id="btnSampleData">샘플 데이터 채우고 개별상담 보기</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>교육과정 편제표 업로드 (선택, 정확도↑)</h2>
+        <p class="hint">열: 학년, 학기, 교과, 과목명, 과목구분, 학점, 개설여부, 필수/선택 · 과목구분 자동 매핑, 미개설 과목 진단, <b>목표 역산 자동계산</b>에 사용됩니다. 없어도 진행 가능(해당 기능만 생략됨). 엑셀(.xlsx) 또는 CSV 파일을 업로드하세요.</p>
+        <div class="btnbar">
+          <input type="file" id="curriculumFile" accept=".xlsx,.csv">
+          <button id="btnLoadCurriculum">편제표 업로드</button>
+          <button class="secondary" id="btnCurriculumTemplate">예시 서식 다운로드</button>
+        </div>
+        <div id="curriculumStatus" class="hint" style="margin-top:8px"></div>
+      </div>
+
+      <div class="panel">
+        <h2>학생 성적 입력</h2>
+        <p class="hint">필수 열: 학생ID, 학년, 학기, 교과, 과목명, 학점, 석차등급, 성취도 · 선택 열: 원점수, 과목평균, 수강자수, A비율, B비율, C비율 (0~1) · 엑셀(.xlsx) 또는 CSV 파일을 업로드하세요. <b>학생ID에 실명을 사용하지 마세요</b> — 번호나 별칭을 권장합니다.</p>
+        <div class="btnbar">
+          <input type="file" id="gradesFile" accept=".xlsx,.csv">
+          <button id="btnLoadGrades">성적 추가 반영</button>
+          <button class="secondary" id="btnReplaceGrades">전체 교체 반영</button>
+          <button class="secondary" id="btnGradesTemplate">예시 서식 다운로드</button>
+        </div>
+        <p class="hint">"추가 반영"은 기존 데이터에 합칩니다(반 추가 시). "전체 교체"는 기존 성적 데이터를 지우고 새로 넣습니다.</p>
+        <div id="gradesStatus"></div>
+        <div id="nameWarning" class="err"></div>
+      </div>
+    </div>
+
+    <!-- ============ ② 반 전체 ============ -->
+    <div class="screen no-print" id="screen-batch">
+      <div class="panel">
+        <h2>반 전체 진단표</h2>
+        <p class="hint">열 제목을 클릭하면 정렬됩니다. "상담" 버튼을 누르면 개별상담 화면으로 이동합니다. (수능최저 게이트는 개별상담에서 모의고사 등급 입력 후 확인)</p>
+        <div class="row"><div><label>학생ID 검색</label><input type="text" id="batchFilter" placeholder="학생ID 일부 입력"></div></div>
+        <div style="overflow-x:auto"><table id="batchTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ============ ③ 개별상담 ============ -->
+    <div class="screen" id="screen-consult">
+      <div class="panel no-print">
+        <h2>상담 조건</h2>
+        <div class="row">
+          <div>
+            <label>학생 선택</label>
+            <select id="studentSelect"></select>
+          </div>
+          <div>
+            <label>계열</label>
+            <select id="trackSelect"><option value="인문">인문</option><option value="자연">자연</option></select>
+          </div>
+          <div>
+            <label>학년</label>
+            <select id="gradeSelect">
+              <option value="auto">자동 감지(성적 데이터 기준)</option>
+              <option value="1">고1</option>
+              <option value="2">고2</option>
+              <option value="3">고3</option>
+            </select>
+          </div>
+          <div>
+            <label>관심 모집단위 (고1, 선택)</label>
+            <select id="unitSelect"><option value="">선택 안함</option></select>
+          </div>
+          <div>
+            <label>보기 모드</label>
+            <select id="viewMode"><option value="teacher">교사용 (전략 정보 포함)</option><option value="student">학생용 (핵심 정보만)</option></select>
+          </div>
+          <div>
+            <label>미인정 결석/지각 (건)</label>
+            <input type="number" id="absenceCount" value="0" min="0">
+          </div>
+        </div>
+        <div class="row">
+          <div><label>재수 시뮬레이션</label>
+            <select id="graduateSim"><option value="0">재학생 기준</option><option value="1">졸업생(재수) 기준으로 보기</option></select>
+          </div>
+        </div>
+
+        <h3 style="font-size:13px;margin-top:14px">모의고사 등급 (수능최저 게이트용, 1~9)</h3>
+        <div class="row" id="mockGradeInputs" style="flex-wrap:nowrap">
+          <div><label>국어</label><input type="number" min="1" max="9" id="mg_국어"></div>
+          <div><label>수학</label><input type="number" min="1" max="9" id="mg_수학"></div>
+          <div><label>영어</label><input type="number" min="1" max="9" id="mg_영어"></div>
+          <div><label>한국사</label><input type="number" min="1" max="9" id="mg_한국사"></div>
+          <div><label>통합사회</label><input type="number" min="1" max="9" id="mg_사회"></div>
+          <div><label>통합과학</label><input type="number" min="1" max="9" id="mg_과학"></div>
+        </div>
+
+        <h3 style="font-size:13px;margin-top:14px">수시 지원 카드 (최대 6장, 학종·교과 전형만 — 논술 제외)</h3>
+        <p class="hint">대학을 고르면 전형·반영요소·수능최저가 자동으로 뜹니다. 이 도구는 합격 가능성을 계산하지 않습니다 — 상향/적정 판단은 선생님 몫입니다.</p>
+        <div id="cardsContainer"></div>
+        <div class="btnbar"><button type="button" id="btnAddCard" class="secondary">+ 카드 추가</button></div>
+        <div id="cardsSummary" class="hint" style="margin-top:8px"></div>
+
+        <div class="btnbar">
+          <button id="btnRender">상담 화면 생성</button>
+        </div>
+      </div>
+
+      <div class="btnbar no-print" style="margin-bottom:10px">
+        <button id="btnPrint">🖨 인쇄 (A4 한 장)</button>
+      </div>
+
+      <div class="sheet" id="consultSheet" style="display:none">
+        <div class="head">
+          <div>
+            <div class="id" id="out_id">-</div>
+            <div class="summary" id="out_summary">-</div>
+          </div>
+          <div style="text-align:right">
+            <div class="bignum" id="out_gradeavg">-</div>
+            <div class="hint" id="out_conv">-</div>
+          </div>
+        </div>
+
+        <div class="sect" id="out_grade1box" style="display:none">
+          <h3>고1 진단</h3>
+          <div class="gradebox" id="out_grade1_content"></div>
+        </div>
+
+        <div class="sect" id="out_grade2box" style="display:none">
+          <h3>두 축 진단</h3>
+          <div class="gradebox" id="out_grade2_content"></div>
+        </div>
+
+        <div class="sect">
+          <h3>① 수능최저 (모의고사 기준)</h3>
+          <div class="gatebox" id="out_gate"></div>
+        </div>
+
+        <div class="sect">
+          <h3>② 지원 가능 여부</h3>
+          <div id="out_eligibility"></div>
+        </div>
+
+        <div class="sect">
+          <h3>③ 대학별 판정</h3>
+          <div class="muted hint" style="margin-bottom:6px">환산표 공개 대학은 정밀 점수, 그 외는 반영유형 + 밴드로 안내합니다.</div>
+          <div id="out_univ_precise"></div>
+          <div id="out_univ_band" style="margin-top:8px"></div>
+        </div>
+
+        <div class="sect">
+          <h3>④ 수시 지원 카드</h3>
+          <div id="out_cards"></div>
+        </div>
+
+        <div class="sect">
+          <h3>⑤ 목표 역산 (편제표 기준 자동 계산)</h3>
+          <div id="out_reverse"></div>
+        </div>
+
+        <div class="sect">
+          <h3>⑥ 관리 우선순위</h3>
+          <div>석차등급 &gt; 성취도 &gt; 원점수 &nbsp;·&nbsp; 미인정 출결: <span id="out_absence">0</span>건</div>
+        </div>
+
+        <div class="sect reminder">
+          <ul id="out_reminders"></ul>
+        </div>
+
+        <div class="footdisc">참고용 자료 · 공식 합불 예측 아님 · 출력일: <span id="out_date"></span></div>
+      </div>
+    </div>
+
+    <!-- ============ ④ 학교통계 ============ -->
+    <div class="screen no-print" id="screen-stats">
+      <div class="panel">
+        <h2>과목별 성취도(A~E) 분포 집계 (교사용)</h2>
+        <p class="hint">현재 반영된 성적 데이터 기준. 교육과정협의회·평가계획 자료로 활용하세요.</p>
+        <div style="overflow-x:auto"><table id="statsTable"><thead>
+          <tr><th>과목명</th><th>교과</th><th>응시 학점 합</th><th>A%</th><th>B%</th><th>C%</th><th>D%</th><th>E%</th></tr>
+        </thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================== 상태 ============================== */
+let DB = null;                 // data.json 로드 결과
+let curriculumRows = [];       // 편제표 원본 행
+let gradeRows = [];            // 학생 성적 원본 행(전체 학생 합본)
+let meta = { schema: 1, lastSaved: null };
+
+let curriculumMap = new Map(); // 과목명 -> {과목구분,학점,교과,개설여부}
+let studentsById = new Map();  // 학생ID -> [record,...]
+let applicationCards = {};     // 학생ID -> [{university,jeonhyeong,tier,note}, ...] (최대 6장)
+
+let batchSort = { key: 'gradeAvg', dir: 1 };
+
+/* ============================== localStorage 영속화 (§4.4, §8) ============================== */
+const LS = { CURRICULUM: 'sago:curriculum', STUDENTS: 'sago:students', META: 'sago:meta', CARDS: 'sago:cards' };
+
+function loadFromStorage(){
+  try{
+    curriculumRows = JSON.parse(localStorage.getItem(LS.CURRICULUM) || '[]');
+    gradeRows = JSON.parse(localStorage.getItem(LS.STUDENTS) || '[]');
+    meta = JSON.parse(localStorage.getItem(LS.META) || 'null') || meta;
+    applicationCards = JSON.parse(localStorage.getItem(LS.CARDS) || '{}');
+  }catch(e){
+    console.warn('localStorage 복원 실패', e);
+  }
+  rebuildIndexes();
+}
+
+function saveAll(){
+  localStorage.setItem(LS.CURRICULUM, JSON.stringify(curriculumRows));
+  localStorage.setItem(LS.STUDENTS, JSON.stringify(gradeRows));
+  localStorage.setItem(LS.CARDS, JSON.stringify(applicationCards));
+  meta.lastSaved = new Date().toISOString();
+  localStorage.setItem(LS.META, JSON.stringify(meta));
+}
+
+function rebuildIndexes(){
+  curriculumMap = buildCurriculumMap(curriculumRows);
+  studentsById = new Map();
+  gradeRows.forEach(r=>{
+    if(!r['학생ID']) return;
+    if(!studentsById.has(r['학생ID'])) studentsById.set(r['학생ID'], []);
+    studentsById.get(r['학생ID']).push(r);
+  });
+}
+
+function refreshAllViews(){
+  refreshStudentSelect();
+  renderBatchTable();
+  renderStatsTable();
+}
+
+/* ============================== 전형DB (원래 data.json — 서버 없이 더블클릭으로 열 수 있도록 파일 안에 직접 넣음) ============================== */
+DB = {
+  "schema": 1,
+  "updated": "2026-09",
+  "source": "경기도진학지도협의회 「2028 대입전형 분석과 대비」(2026.5.9, 아주대) / 2028학년도 대학입학전형 시행계획(2026.4.30) / 부산광역시교육청 학력개발원 진로진학지원센터 5등급제 누적등급평균 분석자료",
+
+  "notes": {
+    "min_suneung_format": "N합M = N개 영역 등급 합 M 이내 / N개M = N개 영역 각각 M등급 이내 / 접두 '수' = 수학 필수 포함 / 접두 '국수' = 국어·수학 지정 / 접미 한N = 한국사 N등급 이내 / _약,_치,_간호 = 학과 한정. 자연계열 최저는 원자료에 없는 경우 null(미확인)로 둔다.",
+    "graduate_ok": "false = 재학생만 지원 가능. true = 졸업생도 지원 가능(자료상 별도 제한 없음 = 확인된 것은 아니고 '재학생 전용' 표시가 없었다는 뜻).",
+    "score_type": "등급 | 성취도 | 원점수 | 혼합 — 이 전형이 학생의 어느 값을 실제로 보는가",
+    "record_pct/attendance_pct/interview_pct/document_pct": "학생부(교과)/출결/면접/서류 반영 비율(%). 원자료에 없으면 null.",
+    "discrimination": "실질 변별폭. 반영비율과 다른 개념(§7.5). 대부분 미확인이라 null.",
+    "score_table": "환산표 공개 대학만 채움. 나머지는 null → 화면에서는 밴드+반영유형으로만 안내."
+  },
+
+  "tone_reminders": [
+    "지금부터 특정 대학의 유불리를 미리 고민할 필요는 없다.",
+    "석차등급 관리 > 성취도 관리 > 원점수 관리",
+    "3-1까지 등급평균 1.00 유지자는 전국 0.2~0.4%(약 700~1,400명) 수준 — 언론·사교육이 말하는 2~4%의 약 1/10",
+    "한두 과목 2등급으로도 의예과 수시 지원 가능한 수준이다",
+    "5등급제에서도 학생부교과 전형은 변별력이 확보돼 있다"
+  ],
+
+  "conversion_table": {
+    "description": "9등급제 입결(과거 자료)을 5등급제 학생과 비교하기 위한 매개 변수. 등급을 직접 변환하지 않고 누적 백분위를 매개로 선형보간한다. 표 간격 0.16~0.17.",
+    "source": "부산광역시교육청 학력개발원 진로진학지원센터 (98개교 15,978명, 2학년 1학기까지 누적)",
+    "rows": [
+      { "five_avg": 1.00, "top_pct": 0.20, "nine_avg": 1.09, "estimated": true },
+      { "five_avg": 1.00, "top_pct": 0.30, "nine_avg": 1.15, "estimated": true },
+      { "five_avg": 1.00, "top_pct": 0.40, "nine_avg": 1.19, "estimated": true },
+      { "five_avg": 1.00, "top_pct": 0.68, "nine_avg": 1.28, "estimated": false },
+      { "five_avg": 1.04, "top_pct": 1.01, "nine_avg": 1.38, "estimated": false },
+      { "five_avg": 1.08, "top_pct": 1.40, "nine_avg": 1.47, "estimated": false },
+      { "five_avg": 1.16, "top_pct": 2.23, "nine_avg": 1.68, "estimated": false },
+      { "five_avg": 1.24, "top_pct": 3.16, "nine_avg": 1.87, "estimated": false },
+      { "five_avg": 1.33, "top_pct": 4.29, "nine_avg": 2.07, "estimated": false },
+      { "five_avg": 1.42, "top_pct": 5.44, "nine_avg": 2.25, "estimated": false },
+      { "five_avg": 1.50, "top_pct": 6.49, "nine_avg": 2.39, "estimated": false },
+      { "five_avg": 1.66, "top_pct": 8.89, "nine_avg": 2.66, "estimated": false },
+      { "five_avg": 1.83, "top_pct": 12.41, "nine_avg": 2.98, "estimated": false },
+      { "five_avg": 2.00, "top_pct": 16.58, "nine_avg": 3.30, "estimated": false },
+      { "five_avg": 2.16, "top_pct": 20.64, "nine_avg": 3.58, "estimated": false },
+      { "five_avg": 2.33, "top_pct": 25.45, "nine_avg": 3.87, "estimated": false },
+      { "five_avg": 2.50, "top_pct": 31.00, "nine_avg": 4.18, "estimated": false },
+      { "five_avg": 2.66, "top_pct": 36.37, "nine_avg": 4.45, "estimated": false },
+      { "five_avg": 2.83, "top_pct": 42.75, "nine_avg": 4.72, "estimated": false },
+      { "five_avg": 3.00, "top_pct": 49.96, "nine_avg": 5.03, "estimated": false },
+      { "five_avg": 3.16, "top_pct": 56.15, "nine_avg": 5.30, "estimated": false },
+      { "five_avg": 3.33, "top_pct": 62.92, "nine_avg": 5.58, "estimated": false },
+      { "five_avg": 3.50, "top_pct": 69.29, "nine_avg": 5.87, "estimated": false },
+      { "five_avg": 3.66, "top_pct": 74.93, "nine_avg": 6.12, "estimated": false },
+      { "five_avg": 3.83, "top_pct": 80.30, "nine_avg": 6.40, "estimated": false },
+      { "five_avg": 4.00, "top_pct": 85.54, "nine_avg": 6.71, "estimated": false },
+      { "five_avg": 4.16, "top_pct": 89.21, "nine_avg": 6.99, "estimated": false },
+      { "five_avg": 4.33, "top_pct": 92.51, "nine_avg": 7.28, "estimated": false },
+      { "five_avg": 4.50, "top_pct": 94.58, "nine_avg": 7.54, "estimated": false },
+      { "five_avg": 4.66, "top_pct": 96.16, "nine_avg": 7.80, "estimated": false },
+      { "five_avg": 4.83, "top_pct": 97.48, "nine_avg": 8.12, "estimated": false },
+      { "five_avg": 5.00, "top_pct": 100.00, "nine_avg": 9.00, "estimated": false }
+    ]
+  },
+
+  "retention_reference": {
+    "description": "등급평균 1.00을 유지하는 난이도 참고 자료. 1.00 구간에만 존재하는 실측치이며 다른 구간에 외삽 금지.",
+    "warning": "이 데이터는 오직 five_avg=1.00 구간에서만 유효하다. 다른 등급대에 적용하지 말 것.",
+    "rows": [
+      { "stage": "1-1", "cumulative_pct": 2.07, "retention_from_prev_pct": null },
+      { "stage": "1-2 누적", "cumulative_pct": 1.30, "retention_from_prev_pct": 62.8 },
+      { "stage": "2-1 누적", "cumulative_pct": 0.68, "retention_from_prev_pct": 52.3 },
+      { "stage": "3-1 예상", "cumulative_pct_range": [0.2, 0.4], "retention_from_prev_pct": null, "estimated": true }
+    ]
+  },
+
+  "universities": [
+    {
+      "id": "hanyang-erica",
+      "name": "한양대(에리카)",
+      "jeonhyeong": "지역균형선발",
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": "3합5_약" },
+      "graduate_ok": false,
+      "discrimination": null,
+      "score_table": null,
+      "priority_seed": true,
+      "note": "지역 근접성으로 우선 구현 대상"
+    },
+    {
+      "id": "ajou",
+      "name": "아주대",
+      "jeonhyeong": null,
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": false,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "inha",
+      "name": "인하대",
+      "jeonhyeong": null,
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "gachon",
+      "name": "가천대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "outcomes_unusable": true,
+      "note": "⚠️ 입결활용불가: 국·영·수·사·과 5개 교과 중 4개 반영, 배점 5/4/3/2. 매년 반영 방식이 바뀌어 전년도 입결을 그대로 쓸 수 없다."
+    },
+    {
+      "id": "kyonggi",
+      "name": "경기대",
+      "jeonhyeong": "학교장추천",
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합7", "자연": null },
+      "graduate_ok": false,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "catholic",
+      "name": "가톨릭대",
+      "jeonhyeong": "지역균형",
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합7", "자연": null },
+      "graduate_ok": false,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "incheon",
+      "name": "인천대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합7", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "kpu",
+      "name": "한국공학대",
+      "jeonhyeong": null,
+      "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합8", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "전형방법 원자료 미확인"
+    },
+    {
+      "id": "hankyong",
+      "name": "한경국립대",
+      "jeonhyeong": null,
+      "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합8", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "전형방법 원자료 미확인"
+    },
+    {
+      "id": "suwon",
+      "name": "수원대",
+      "jeonhyeong": null,
+      "method_raw": "학생부60+면접40",
+      "record_pct": 60, "attendance_pct": 0, "interview_pct": 40, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합7 또는 1개4", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "면접 비중 40%로 매우 큼 — 서류·교과 외 요소 강조 필요"
+    },
+    {
+      "id": "gangnam",
+      "name": "강남대",
+      "jeonhyeong": null,
+      "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급",
+      "min_suneung": { "인문": "1개3", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "kookmin-hakchu1",
+      "name": "국민대(학교장추천1)",
+      "jeonhyeong": "학교장추천1",
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": false,
+      "discrimination": null,
+      "score_table": null,
+      "note": "국민대는 전형에 따라 반영유형이 갈린다 — 학추2와 반드시 구분해서 안내"
+    },
+    {
+      "id": "kookmin-hakchu2",
+      "name": "국민대(학교장추천2)",
+      "jeonhyeong": "학교장추천2",
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "sejong",
+      "name": "세종대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합5", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "seoultech",
+      "name": "서울과기대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "soongsil",
+      "name": "숭실대",
+      "jeonhyeong": null,
+      "method_raw": "학생부90+서류10",
+      "record_pct": 90, "attendance_pct": 0, "interview_pct": 0, "document_pct": 10,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "서류 10% — 정성평가 요소 있음"
+    },
+    {
+      "id": "kwangwoon",
+      "name": "광운대",
+      "jeonhyeong": null,
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "myongji",
+      "name": "명지대",
+      "jeonhyeong": null,
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "hongik",
+      "name": "홍익대",
+      "jeonhyeong": null,
+      "method_raw": "학생부95+출결5",
+      "record_pct": 95, "attendance_pct": 5, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합5, 한4", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "dankook",
+      "name": "단국대",
+      "jeonhyeong": null,
+      "method_raw": "학생부95+출결5",
+      "record_pct": 95, "attendance_pct": 5, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "sangmyung",
+      "name": "상명대",
+      "jeonhyeong": null,
+      "method_raw": "학생부95+출결5",
+      "record_pct": 95, "attendance_pct": 5, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": null,
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "수능최저 없음"
+    },
+    {
+      "id": "kau-jeongkwa1",
+      "name": "한국항공대(교과성적우수1)",
+      "jeonhyeong": "교과성적우수1",
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합6", "자연": null },
+      "graduate_ok": false,
+      "discrimination": null,
+      "score_table": null,
+      "note": "이 대학의 다른 전형은 재학생 제한이 없을 수 있으나 원자료 미확인"
+    },
+    {
+      "id": "sungshin",
+      "name": "성신여대",
+      "jeonhyeong": "지역균형1",
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합7", "자연": null },
+      "graduate_ok": false,
+      "discrimination": null,
+      "priority_seed": true,
+      "score_table": {
+        "type": "matrix_grade_achievement",
+        "description": "등급×성취도 교차 매트릭스. 행=성취도, 열=석차등급.",
+        "matrix": {
+          "A": { "1": 100.0, "2": 97.5, "3": 95.0, "4": 83.0, "5": 70.0 },
+          "B": { "1": 99.5, "2": 97.0, "3": 92.5, "4": 81.0, "5": 65.0 },
+          "C": { "1": 99.0, "2": 96.5, "3": 90.0, "4": 79.0, "5": 60.0 },
+          "D": { "1": 98.5, "2": 96.0, "3": 87.5, "4": 77.0, "5": 55.0 },
+          "E": { "1": 98.0, "2": 95.5, "3": 85.0, "4": 75.0, "5": 50.0 }
+        },
+        "penalty_rule": {
+          "description": "취득 성취도의 학교 내 분포비율이 아래 기준을 초과하면 해당 과목 점수에 0.999를 곱한다.",
+          "thresholds": { "A": 0.40, "B": 0.50, "C": 0.70, "D": 0.50, "E": 0.40 },
+          "multiplier": 0.999,
+          "requires": ["A비율", "B비율", "C비율"]
+        }
+      },
+      "note": "유일하게 등급×성취도 정밀 계산이 가능한 공개 사례 — 우선 구현"
+    },
+    {
+      "id": "duksung",
+      "name": "덕성여대",
+      "jeonhyeong": null,
+      "method_raw": "학생부90+출결10",
+      "record_pct": 90, "attendance_pct": 10, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": { "인문": "2합7", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "priority_seed": true,
+      "score_table": {
+        "type": "grade_or_achievement_by_cohort",
+        "description": "재학생(2022 개정, 2028.2 졸업예정)과 졸업생(2015 개정, 2026.2~2027.2 졸업)을 분리 환산. 같은 등급이어도 재학생이 유리하다.",
+        "current_student_2022": {
+          "grade_map": { "1": 100, "2": 98, "3": 95, "4": 85, "5": 0 },
+          "achievement_map": { "A": 100, "B": 98, "C": 95, "D": 85, "E": 0 }
+        },
+        "graduate_2015": {
+          "grade_map": { "1": 99.5, "2": 99.5, "3": 97.5, "4": 95, "5": 95, "6": 85, "7": 85, "8": 80, "9": 0 },
+          "achievement_map": { "A": 99.5, "B": 97.5, "C": 85 }
+        },
+        "note": "동일 등급 기준 재학생 100점 vs 졸업생 99.5점 — 재수 상담 시 근거 자료로 사용"
+      },
+      "note": "재학생/졸업생 환산표 분리 사례 — 우선 구현"
+    },
+    {
+      "id": "seoulwomen",
+      "name": "서울여대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합7", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "dongduk",
+      "name": "동덕여대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "등급",
+      "min_suneung": { "인문": "2합7", "자연": null },
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": ""
+    },
+    {
+      "id": "hansung",
+      "name": "한성대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": null,
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "수능최저 원자료 미확인"
+    },
+    {
+      "id": "seokyoung",
+      "name": "서경대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": null,
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "수능최저 원자료 미확인"
+    },
+    {
+      "id": "sahmyook",
+      "name": "삼육대",
+      "jeonhyeong": null,
+      "method_raw": "학생부100",
+      "record_pct": 100, "attendance_pct": 0, "interview_pct": 0, "document_pct": 0,
+      "score_type": "성취도",
+      "min_suneung": null,
+      "graduate_ok": true,
+      "discrimination": null,
+      "score_table": null,
+      "note": "수능최저 원자료 미확인"
+    },
+
+    { "id": "skku", "name": "성균관대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인, 2027년 모집요강 발표 후 갱신 필요. 탐구 사회+과학 둘 다 반영." },
+    { "id": "hanyang", "name": "한양대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "서울캠퍼스 본교(에리카캠퍼스와 별도). 27p 분류에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "ewha", "name": "이화여대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "chungang", "name": "중앙대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인. 탐구 사회+과학 둘 다 반영." },
+    { "id": "hufs", "name": "한국외대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "uos", "name": "서울시립대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "konkuk", "name": "건국대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "kangseo", "name": "강서대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "eulji", "name": "을지대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "shinhan", "name": "신한대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "daejin", "name": "대진대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "ptu", "name": "평택대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "hanshin", "name": "한신대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "hansei", "name": "한세대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "knu", "name": "경북대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "pnu", "name": "부산대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류 참고자료에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "korea-sejong", "name": "고려대(세)", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "등급", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "고려대 세종캠퍼스(본교와 별도). 27p 분류에서 승격 — 전형방법·수능최저·재학생 제한 미확인." },
+
+    { "id": "yonsei", "name": "연세대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "korea", "name": "고려대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인. 의대 제외 수능최저 폐지 경향(§11.2 참고)." },
+    { "id": "sogang", "name": "서강대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "khu", "name": "경희대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": false, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "dongguk", "name": "동국대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인. 탐구 사회+과학 둘 다 반영. §7.5 정시 서류평가 실질변별 거의 없음 사례 대상(교사용 참고)." },
+    { "id": "sookmyung", "name": "숙명여대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "seoul-nue", "name": "서울교대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "교육대학. 27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "gyeongin-nue", "name": "경인교대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "교육대학. 27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "gwangju-nue", "name": "광주교대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "교육대학. 27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "kangwon", "name": "강원대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "cnu", "name": "충남대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "cbnu", "name": "충북대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "gnu", "name": "경상국립대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "jbnu", "name": "전북대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "jnu", "name": "전남대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "27p 분류(등급+성취도)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "yonsei-mirae", "name": "연세대(미)", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "연세대 미래캠퍼스(원주, 본교와 별도). 27p 분류에서 승격 — 전형방법·수능최저·재학생 제한 미확인." },
+    { "id": "dankook-cheonan", "name": "단국대(천)", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "혼합", "min_suneung": null, "graduate_ok": true, "discrimination": null, "score_table": null,
+      "note": "단국대 천안캠퍼스(죽전캠퍼스와 별도). 27p 분류에서 승격 — 전형방법·수능최저 미확인." },
+
+    { "id": "jeju", "name": "제주대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "원점수", "min_suneung": null, "graduate_ok": true, "discrimination": null,
+      "score_table": {
+        "type": "raw_score_z",
+        "formula": "상대점수 = (원점수 − 과목평균) / 과목분포점수 + 0.1",
+        "variance_proxy_formula": "과목분포점수 = √Σ[(성취도 구간별 계급값 − 과목평균)² × 성취도별 분포비율]",
+        "class_values": { "A": 95, "B": 85, "C": null, "D": null, "E": null },
+        "class_values_note": "C·D·E 계급값은 원자료 재확인 필요"
+      },
+      "note": "27p 분류(원점수 활용)에서 승격 — 전형방법·수능최저 미확인." },
+    { "id": "anyang", "name": "안양대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "원점수", "min_suneung": null, "graduate_ok": true, "discrimination": null,
+      "score_table": {
+        "type": "raw_score_z",
+        "formula": "상대점수 = (원점수 − 과목평균) / 과목분포점수 + 0.1",
+        "variance_proxy_formula": "과목분포점수 = √Σ[(성취도 구간별 계급값 − 과목평균)² × 성취도별 분포비율]",
+        "class_values": { "A": 95, "B": 85, "C": null, "D": null, "E": null },
+        "class_values_note": "C·D·E 계급값은 원자료 재확인 필요"
+      },
+      "note": "27p 분류에 등급만 반영 전형과 원점수 활용 전형이 모두 등장 — 전형별로 반영방식이 다를 수 있으니 지원 전 반드시 확인." },
+    { "id": "yongin", "name": "용인대", "jeonhyeong": null, "method_raw": null,
+      "record_pct": null, "attendance_pct": null, "interview_pct": null, "document_pct": null,
+      "score_type": "원점수", "min_suneung": null, "graduate_ok": true, "discrimination": null,
+      "score_table": {
+        "type": "raw_score_z",
+        "formula": "상대점수 = (원점수 − 과목평균) / 과목분포점수 + 0.1",
+        "variance_proxy_formula": "과목분포점수 = √Σ[(성취도 구간별 계급값 − 과목평균)² × 성취도별 분포비율]",
+        "class_values": { "A": 95, "B": 85, "C": null, "D": null, "E": null },
+        "class_values_note": "C·D·E 계급값은 원자료 재확인 필요"
+      },
+      "note": "27p 분류(원점수 활용)에서 승격 — 전형방법·수능최저 미확인." }
+  ],
+
+  "raw_score_formula_reference": {
+    "description": "원점수 활용 대학(제주대·안양대·용인대)의 공식. v1에는 전형DB 정식 항목으로 넣지 않고 참고용으로만 보관 — 계산 엔진은 지금 만들되 학교별 요강 확인 후 정식 등록.",
+    "universities": ["제주대", "안양대", "용인대"],
+    "formula": "상대점수 = (원점수 − 과목평균) / 과목분포점수 + 0.1",
+    "variance_proxy_formula": "과목분포점수 = √Σ[(성취도 구간별 계급값 − 과목평균)² × 성취도별 분포비율]",
+    "class_values": { "A": 95, "B": 85, "C": null, "D": null, "E": null },
+    "class_values_note": "C·D·E 계급값은 원자료 재확인 필요"
+  },
+
+  "classification_reference": {
+    "description": "27p 전체 분류. 2026-09-05에 아래 목록 전체를 정식 universities 항목으로 승격 완료(전형방법·수능최저는 대부분 미확인 상태로 등록됨, note 필드 참고). 이 블록은 원본 출처 대조용으로만 남긴다.",
+    "등급만으로_충분": ["성균관대", "한양대", "이화여대", "중앙대", "한국외대", "서울시립대", "건국대", "서울과기대", "국민대(학추1)", "상명대", "서울여대", "동덕여대", "가천대(학생부)", "경기대", "인천대", "수원대", "강남대", "강서대", "을지대", "한국공학대", "한경국립대", "안양대", "신한대", "대진대", "평택대", "한신대", "한세대", "경북대", "부산대", "고려대(세)"],
+    "등급_성취도": ["연세대", "고려대", "서강대", "경희대", "동국대", "홍익대", "숙명여대", "국민대(학추2)", "숭실대", "세종대", "광운대", "명지대", "성신여대", "덕성여대", "한성대", "서경대", "삼육대", "아주대", "인하대", "단국대", "가톨릭대", "한양대(에)", "한국항공대", "서울교대", "경인교대", "광주교대", "강원대", "충남대", "충북대", "경상국립대", "전북대", "전남대", "연세대(미)", "단국대(천)"],
+    "원점수_활용": ["제주대", "안양대", "용인대"],
+    "재학생만_2028교과": ["연세대", "고려대", "서강대", "성균관대", "한양대", "이화여대", "중앙대", "경희대", "한국외대", "서울시립대", "아주대", "국민대(학교장추천1)", "성신여대(지역균형1)", "경기대(학교장추천)", "가톨릭대(지역균형)", "한양대(에)(지역균형선발)", "한국항공대(교과성적우수1)"]
+  },
+
+  "recommended_subjects_by_track": {"description":"2028학년도 대표 모집단위(학과)별 대학 권장 선택과목. 고1 과목 선택 설계에 사용.","source":"대교협(한국대학교육협의회) 2028학년도 계열별 대표 모집단위별 반영과목 자료","note":"⁎/* 표시 대학은 학과 특성상 필수 지정이 아니라 일반 선택 과목 이수 후 진로·적성에 맞게 권장하는 대학임. 같은 학과명이 한 대학에서 두 번 나오는 경우 원본 자료에 실제로 두 항목(예: 캠퍼스·세부전공 차이)으로 기재돼 있던 것.","subject_columns":["국어","대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","기하","영어","일반사회","역사","지리","윤리","물리학","화학","생명과학","지구과학","기타"],"units":[{"track":"인문","unit":"영어영문","recommendations":[{"university":"강원대(춘천)","subjects":["영어"],"starred":false},{"university":"광운대","subjects":["국어","확률과 통계","영어","일반사회","윤리"],"starred":false},{"university":"단국대","subjects":["국어","대수","영어","일반사회"],"starred":true},{"university":"단국대(천안)","subjects":["국어","대수","영어","일반사회"],"starred":true},{"university":"덕성여대","subjects":["국어","영어","일반사회"],"starred":false},{"university":"동국대","subjects":["국어","영어","일반사회","역사","윤리"],"starred":false},{"university":"서울대 (제2외/한문)","subjects":["기타"],"starred":false},{"university":"서울시립대","subjects":["국어","대수","일반사회"],"starred":false},{"university":"숭실대","subjects":["국어","영어","일반사회"],"starred":false},{"university":"영남대","subjects":["국어","확률과 통계","영어","일반사회"],"starred":false},{"university":"전남대","subjects":["영어","일반사회"],"starred":false},{"university":"전북대","subjects":["국어","영어"],"starred":false},{"university":"조선대","subjects":["영어"],"starred":false},{"university":"충북대","subjects":["영어","일반사회","기타"],"starred":false}]},{"track":"인문","unit":"철학","recommendations":[{"university":"강원대(춘천)","subjects":["국어","영어","윤리","기타"],"starred":false},{"university":"건국대","subjects":["국어","영어","일반사회"],"starred":false},{"university":"단국대","subjects":["국어","대수","영어","일반사회"],"starred":true},{"university":"단국대(천안)","subjects":["국어","대수","영어","일반사회"],"starred":true},{"university":"동국대","subjects":["국어","윤리","기타"],"starred":false},{"university":"동아대","subjects":["국어","일반사회"],"starred":false},{"university":"서울대 (제2외/한문)","subjects":["기타"],"starred":false},{"university":"서울시립대","subjects":["국어","대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","기하","영어","일반사회","역사","지리","윤리"],"starred":false},{"university":"숭실대","subjects":["국어","영어","일반사회"],"starred":false},{"university":"영남대","subjects":["국어","영어","일반사회","기타"],"starred":false},{"university":"전남대","subjects":["국어","윤리"],"starred":false},{"university":"충남대","subjects":["국어","영어","기타"],"starred":false},{"university":"충북대","subjects":["국어","일반사회"],"starred":false}]},{"track":"사회","unit":"경영","recommendations":[{"university":"강원대(춘천)","subjects":["국어","확률과 통계","미적분Ⅰ","영어"],"starred":false},{"university":"광운대","subjects":["국어","대수","확률과 통계","미적분Ⅰ","영어","일반사회","지리","윤리","기타"],"starred":false},{"university":"국립한밭대","subjects":["영어","일반사회"],"starred":false},{"university":"단국대","subjects":["국어","대수","영어","일반사회"],"starred":true},{"university":"단국대(천안)","subjects":["국어","대수","영어","일반사회"],"starred":true},{"university":"동국대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","영어","일반사회"],"starred":false},{"university":"동아대","subjects":["대수","영어"],"starred":false},{"university":"부산대","subjects":["확률과 통계","미적분Ⅰ","미적분Ⅱ"],"starred":false},{"university":"아주대","subjects":["대수","확률과 통계","미적분Ⅰ","일반사회","물리학"],"starred":true},{"university":"영남대","subjects":["국어","대수","확률과 통계","미적분Ⅰ","영어","일반사회","기타"],"starred":false},{"university":"서울대 (제2외/한문)","subjects":["기타"],"starred":false},{"university":"서울과기대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ"],"starred":false},{"university":"서울시립대","subjects":["대수","영어"],"starred":false},{"university":"숭실대","subjects":["국어","대수","확률과 통계","미적분Ⅰ","일반사회"],"starred":false},{"university":"전남대","subjects":["대수","일반사회"],"starred":false},{"university":"전주대","subjects":["국어"],"starred":false},{"university":"조선대","subjects":["대수","영어"],"starred":false},{"university":"충남대","subjects":["확률과 통계","영어"],"starred":false},{"university":"충북대","subjects":["영어","일반사회"],"starred":false},{"university":"한국기술교육대","subjects":["국어","대수","영어","일반사회"],"starred":false},{"university":"한국항공대","subjects":["대수","확률과 통계","미적분Ⅰ"],"starred":false},{"university":"한라대","subjects":["국어"],"starred":false},{"university":"한양대","subjects":["미적분Ⅱ","기하","물리학","화학","생명과학"],"starred":false},{"university":"협성대","subjects":["기타"],"starred":true}]},{"track":"사회","unit":"심리","recommendations":[{"university":"가톨릭대","subjects":["확률과 통계"],"starred":false},{"university":"강원대(춘천)","subjects":["국어","확률과 통계","영어","일반사회"],"starred":false},{"university":"광운대","subjects":["국어","대수","확률과 통계","미적분Ⅰ","영어","일반사회","윤리"],"starred":false},{"university":"서울대 (제2외/한문)","subjects":["기타"],"starred":false},{"university":"아주대","subjects":["대수","확률과 통계","미적분Ⅰ","일반사회"],"starred":true},{"university":"영남대","subjects":["국어","대수","확률과 통계","미적분Ⅰ","영어","일반사회","물리학"],"starred":false},{"university":"전남대","subjects":["영어","일반사회"],"starred":false},{"university":"전주대","subjects":["국어"],"starred":false},{"university":"조선대","subjects":["국어","영어"],"starred":false},{"university":"충남대","subjects":["국어","확률과 통계","영어","일반사회"],"starred":false},{"university":"충북대","subjects":["대수","영어"],"starred":false}]},{"track":"교육","unit":"국어교육","recommendations":[{"university":"강원대(춘천)","subjects":["국어","역사","기타"],"starred":false},{"university":"경북대","subjects":["국어"],"starred":true},{"university":"단국대","subjects":["국어","대수","영어","일반사회"],"starred":true},{"university":"동국대","subjects":["국어","일반사회"],"starred":false},{"university":"서울대 (제2외/한문)","subjects":["기타"],"starred":false},{"university":"전남대","subjects":["국어"],"starred":false},{"university":"전북대","subjects":["국어"],"starred":false},{"university":"전주대","subjects":["국어"],"starred":false},{"university":"조선대","subjects":["국어"],"starred":false},{"university":"충남대","subjects":["국어","영어","기타"],"starred":false},{"university":"충북대","subjects":["국어","일반사회"],"starred":false}]},{"track":"교육","unit":"수학교육","recommendations":[{"university":"강원대(춘천)","subjects":["확률과 통계","미적분Ⅰ","미적분Ⅱ","기하","영어","생명과학"],"starred":false},{"university":"경북대","subjects":["대수"],"starred":true},{"university":"고려대","subjects":["미적분Ⅱ","기하"],"starred":false},{"university":"단국대","subjects":["국어","대수","영어","물리학"],"starred":true},{"university":"동국대","subjects":["대수"],"starred":false},{"university":"부산대","subjects":["확률과 통계","미적분Ⅱ","기하"],"starred":false},{"university":"서울대","subjects":["미적분Ⅰ","미적분Ⅱ","기하","물리학"],"starred":false},{"university":"영남대","subjects":["국어","대수","물리학"],"starred":false},{"university":"전남대","subjects":["대수"],"starred":false},{"university":"전북대","subjects":["대수"],"starred":false},{"university":"전주대","subjects":["대수"],"starred":false},{"university":"조선대","subjects":["대수"],"starred":false},{"university":"충남대","subjects":["대수","물리학"],"starred":false},{"university":"충북대","subjects":["대수","물리학"],"starred":false}]},{"track":"자연","unit":"생명과학","recommendations":[{"university":"가톨릭대","subjects":["화학","생명과학"],"starred":false},{"university":"강원대(춘천)","subjects":["화학","생명과학"],"starred":false},{"university":"경북대","subjects":["미적분Ⅰ","화학","생명과학"],"starred":false},{"university":"경희대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","화학","생명과학"],"starred":false},{"university":"고려대","subjects":["미적분Ⅱ","화학","생명과학"],"starred":false},{"university":"동국대","subjects":["대수","물리학","화학","생명과학"],"starred":false},{"university":"동아대","subjects":["영어","물리학"],"starred":false},{"university":"부산대","subjects":["화학","생명과학"],"starred":false},{"university":"서울과기대","subjects":["대수","물리학","화학","생명과학"],"starred":false},{"university":"서울대","subjects":["미적분Ⅰ","미적분Ⅱ","기하","생명과학"],"starred":false},{"university":"서울시립대","subjects":["화학","생명과학"],"starred":false},{"university":"숭실대","subjects":["대수","생명과학"],"starred":false},{"university":"영남대","subjects":["대수","영어","물리학","화학","생명과학"],"starred":false},{"university":"전북대","subjects":["대수","물리학"],"starred":false},{"university":"중앙대","subjects":["미적분Ⅱ","기하","화학","생명과학"],"starred":false},{"university":"충남대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","화학","생명과학"],"starred":false}]},{"track":"자연","unit":"물리","recommendations":[{"university":"가톨릭대","subjects":["대수","물리학"],"starred":false},{"university":"강원대(춘천)","subjects":["확률과 통계","미적분Ⅰ","미적분Ⅱ","기하","물리학"],"starred":false},{"university":"경북대","subjects":["대수","물리학"],"starred":false},{"university":"경희대","subjects":["대수","물리학","화학"],"starred":false},{"university":"고려대","subjects":["미적분Ⅱ","물리학"],"starred":false},{"university":"광운대","subjects":["대수","물리학","화학","생명과학"],"starred":false},{"university":"국민대","subjects":["대수","미적분Ⅰ","물리학"],"starred":false},{"university":"동국대","subjects":["대수","물리학","화학"],"starred":false},{"university":"부산대","subjects":["미적분Ⅱ","기하","물리학","화학"],"starred":false},{"university":"서울대","subjects":["미적분Ⅱ","기하","물리학"],"starred":false},{"university":"숭실대","subjects":["대수","물리학"],"starred":false},{"university":"영남대","subjects":["대수","영어","물리학","화학"],"starred":false},{"university":"인하대","subjects":["물리학"],"starred":false},{"university":"전남대","subjects":["대수","영어","물리학"],"starred":false},{"university":"전북대","subjects":["대수","물리학"],"starred":false},{"university":"중앙대","subjects":["미적분Ⅱ","기하","물리학","화학"],"starred":false},{"university":"충남대","subjects":["대수","물리학"],"starred":false},{"university":"충북대","subjects":["대수","물리학"],"starred":false}]},{"track":"자연","unit":"화학","recommendations":[{"university":"가톨릭대","subjects":["화학"],"starred":false},{"university":"강원대(춘천)","subjects":["확률과 통계","미적분Ⅰ","미적분Ⅱ","화학","생명과학"],"starred":false},{"university":"경기대","subjects":["물리학"],"starred":false},{"university":"경북대","subjects":["미적분Ⅰ","화학","생명과학"],"starred":false},{"university":"경희대","subjects":["대수","물리학","화학","생명과학"],"starred":false},{"university":"고려대","subjects":["미적분Ⅱ","화학"],"starred":false},{"university":"광운대","subjects":["대수","물리학","화학","생명과학"],"starred":false},{"university":"국민대","subjects":["미적분Ⅰ","물리학","화학"],"starred":false},{"university":"동국대","subjects":["대수","물리학","화학"],"starred":false},{"university":"동아대","subjects":["대수","물리학"],"starred":false},{"university":"부산대","subjects":["화학","생명과학"],"starred":false},{"university":"서울과기대","subjects":["대수","확률과 통계","미적분Ⅰ","물리학","화학"],"starred":false},{"university":"서울대","subjects":["미적분Ⅱ","기하","화학"],"starred":false},{"university":"서울시립대","subjects":["대수","화학"],"starred":false},{"university":"숭실대","subjects":["대수","화학"],"starred":false},{"university":"아주대","subjects":["대수","물리학"],"starred":true},{"university":"영남대","subjects":["대수","영어","물리학","화학","생명과학"],"starred":false},{"university":"전남대","subjects":["화학"],"starred":false},{"university":"전북대","subjects":["대수","물리학"],"starred":false},{"university":"중앙대","subjects":["미적분Ⅱ","물리학","화학","생명과학"],"starred":false},{"university":"충북대","subjects":["대수","물리학"],"starred":false}]},{"track":"공학","unit":"기계공학","recommendations":[{"university":"강원대(삼척)","subjects":["미적분Ⅰ","미적분Ⅱ","영어","물리학","화학"],"starred":false},{"university":"경북대","subjects":["대수","물리학","화학"],"starred":false},{"university":"경희대","subjects":["대수","물리학","화학"],"starred":false},{"university":"고려대","subjects":["미적분Ⅱ","물리학"],"starred":false},{"university":"국민대","subjects":["미적분Ⅰ","미적분Ⅱ","기하","물리학"],"starred":false},{"university":"단국대","subjects":["국어","대수","영어","물리학"],"starred":true},{"university":"동아대","subjects":["대수","물리학"],"starred":false},{"university":"부산대","subjects":["미적분Ⅱ","기하","물리학","화학"],"starred":false},{"university":"서울과기대","subjects":["대수","물리학","화학"],"starred":false},{"university":"서울대","subjects":["미적분Ⅱ","기하","물리학"],"starred":false},{"university":"서울시립대","subjects":["확률과 통계","미적분Ⅰ","미적분Ⅱ","기하","물리학"],"starred":false},{"university":"아주대","subjects":["대수","물리학"],"starred":true},{"university":"영남대","subjects":["대수","영어","물리학","화학"],"starred":false},{"university":"인하대","subjects":["물리학","화학"],"starred":false},{"university":"전남대","subjects":["대수","물리학"],"starred":false},{"university":"전북대","subjects":["대수","물리학"],"starred":false},{"university":"전주대","subjects":["대수","미적분Ⅰ","미적분Ⅱ","기하"],"starred":false},{"university":"조선대","subjects":["대수","물리학"],"starred":false},{"university":"중앙대","subjects":["미적분Ⅱ","기하","물리학","화학"],"starred":false},{"university":"충북대","subjects":["대수","물리학"],"starred":false},{"university":"한국기술교육대","subjects":["국어","대수","영어","물리학"],"starred":false},{"university":"한국항공대","subjects":["대수","물리학"],"starred":false},{"university":"한라대","subjects":["국어"],"starred":false},{"university":"한양대(ERICA)","subjects":["미적분Ⅰ","물리학"],"starred":false}]},{"track":"공학","unit":"컴퓨터공학","recommendations":[{"university":"가톨릭대","subjects":["대수","물리학"],"starred":false},{"university":"강원대(춘천)","subjects":["확률과 통계","미적분Ⅰ","미적분Ⅱ","영어"],"starred":false},{"university":"건국대","subjects":["대수","미적분Ⅰ","미적분Ⅱ","기하","물리학"],"starred":false},{"university":"경북대","subjects":["대수","물리학","화학"],"starred":false},{"university":"경희대","subjects":["대수"],"starred":false},{"university":"고려대","subjects":["미적분Ⅱ","기하"],"starred":false},{"university":"광운대","subjects":["대수","물리학"],"starred":false},{"university":"국민대","subjects":["미적분Ⅰ","미적분Ⅱ","기하","물리학"],"starred":false},{"university":"단국대","subjects":["국어","대수","영어","물리학"],"starred":true},{"university":"동국대","subjects":["대수"],"starred":false},{"university":"동아대","subjects":["대수","영어","물리학"],"starred":false},{"university":"부산대","subjects":["확률과 통계","미적분Ⅱ","기하"],"starred":false},{"university":"서울과기대","subjects":["대수","물리학"],"starred":false},{"university":"서울시립대","subjects":["미적분Ⅰ","미적분Ⅱ","물리학"],"starred":false},{"university":"숭실대","subjects":["미적분Ⅱ","기하","물리학"],"starred":false},{"university":"영남대","subjects":["국어","대수","영어","물리학"],"starred":false},{"university":"전남대","subjects":["대수","물리학"],"starred":false},{"university":"전북대","subjects":["대수","물리학"],"starred":false},{"university":"전주대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","기타"],"starred":false},{"university":"조선대","subjects":["대수","물리학"],"starred":false},{"university":"충남대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","물리학"],"starred":false},{"university":"충북대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","물리학"],"starred":false},{"university":"아주대","subjects":["대수","물리학"],"starred":true},{"university":"원광대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"전남대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"전북대","subjects":["물리학"],"starred":false},{"university":"조선대","subjects":["대수","물리학"],"starred":false},{"university":"중앙대","subjects":["미적분Ⅱ","기하","화학","생명과학"],"starred":false},{"university":"충남대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"충북대","subjects":["영어","물리학"],"starred":false},{"university":"한국기술교육대","subjects":["국어","대수","영어","물리학"],"starred":false},{"university":"한국항공대","subjects":["대수","물리학"],"starred":false},{"university":"한라대","subjects":["국어"],"starred":false},{"university":"한양대(ERICA)","subjects":["확률과 통계","미적분Ⅰ"],"starred":false},{"university":"협성대","subjects":["기타"],"starred":true}]},{"track":"의약","unit":"약학","recommendations":[{"university":"가톨릭대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"강원대(춘천)","subjects":["확률과 통계","미적분Ⅰ","미적분Ⅱ","화학","생명과학"],"starred":false},{"university":"경북대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","물리학","화학","생명과학"],"starred":false},{"university":"경성대","subjects":["미적분Ⅱ","기하","화학","생명과학"],"starred":false},{"university":"경희대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","화학","생명과학"],"starred":false},{"university":"덕성여대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"동국대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"서울대","subjects":["미적분Ⅱ","기하","화학","생명과학"],"starred":false},{"university":"부산대","subjects":["화학","생명과학"],"starred":false},{"university":"영남대","subjects":["대수","영어","물리학","화학","생명과학"],"starred":false},{"university":"한양대(ERICA)","subjects":["화학","생명과학"],"starred":false}]},{"track":"의약","unit":"의예","recommendations":[{"university":"가톨릭대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"강원대(춘천)","subjects":["국어","확률과 통계","미적분Ⅰ","미적분Ⅱ","영어","화학","생명과학"],"starred":false},{"university":"건국대(글로컬)","subjects":["대수","생명과학"],"starred":false},{"university":"경북대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","물리학","화학","생명과학"],"starred":false},{"university":"경희대","subjects":["대수","확률과 통계","미적분Ⅰ","미적분Ⅱ","물리학","화학","생명과학"],"starred":false},{"university":"고려대","subjects":["미적분Ⅱ","화학","생명과학"],"starred":false},{"university":"동아대","subjects":["국어","대수","영어","물리학"],"starred":false},{"university":"부산대","subjects":["화학","생명과학"],"starred":false},{"university":"서울대","subjects":["미적분Ⅱ","기하","생명과학"],"starred":false},{"university":"아주대","subjects":["대수","물리학"],"starred":true},{"university":"영남대","subjects":["대수","영어","물리학","화학","생명과학"],"starred":false},{"university":"원광대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"전남대","subjects":["대수","영어","생명과학"],"starred":false},{"university":"전북대","subjects":["대수","영어"],"starred":false},{"university":"조선대","subjects":["대수","물리학"],"starred":false},{"university":"중앙대","subjects":["미적분Ⅱ","기하","화학","생명과학"],"starred":false},{"university":"충남대","subjects":["대수","화학","생명과학"],"starred":false},{"university":"충북대","subjects":["영어","물리학"],"starred":false}]},{"track":"예체능","unit":"시각디자인","recommendations":[{"university":"강원대(삼척)","subjects":["국어","영어","기타"],"starred":false},{"university":"국립한밭대","subjects":["국어","영어"],"starred":false},{"university":"동아대","subjects":["국어","영어"],"starred":false},{"university":"조선대","subjects":["국어","일반사회","기타"],"starred":false},{"university":"전주대 (미술,기술가정,교양)","subjects":["기타"],"starred":false}]},{"track":"예체능","unit":"음악","recommendations":[{"university":"동아대","subjects":["국어","영어"],"starred":false}]},{"track":"예체능","unit":"체육","recommendations":[{"university":"동아대","subjects":["국어","미적분Ⅰ","미적분Ⅱ","기하","영어","일반사회","물리학"],"starred":false},{"university":"동양대","subjects":["국어","미적분Ⅰ","미적분Ⅱ","기하","영어","일반사회","물리학"],"starred":false},{"university":"조선대","subjects":["국어"],"starred":false},{"university":"한체대 (체육스포츠과학,스포츠생활)","subjects":["기타"],"starred":false}]}]}
+};
+
+/* ============================== CSV 파서 ============================== */
+function stripBOM(text){
+  return (text && text.charCodeAt(0) === 0xFEFF) ? text.slice(1) : text;
+}
+
+function parseCSV(text){
+  text = stripBOM(text || '');
+  const rows = []; let i=0, field='', row=[], inQuotes=false;
+  while(i < text.length){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field+='"'; i+=2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }else{
+      if(c === '"'){ inQuotes = true; i++; continue; }
+      if(c === ','){ row.push(field); field=''; i++; continue; }
+      if(c === '\r'){ i++; continue; }
+      if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; i++; continue; }
+      field += c; i++; continue;
+    }
+  }
+  if(field.length>0 || row.length>0){ row.push(field); rows.push(row); }
+  const filtered = rows.filter(r => r.some(x => (x||'').trim() !== ''));
+  if(filtered.length === 0) return {headers:[], rows:[]};
+  const headers = filtered[0].map(h => h.trim());
+  const dataRows = filtered.slice(1).map(r=>{
+    const obj = {};
+    headers.forEach((h,idx)=> obj[h] = (r[idx] !== undefined ? r[idx].trim() : ''));
+    return obj;
+  });
+  return {headers, rows: dataRows};
+}
+
+function readFileAsText(file){
+  return new Promise((resolve,reject)=>{
+    const fr = new FileReader();
+    fr.onload = ()=>resolve(fr.result);
+    fr.onerror = reject;
+    fr.readAsText(file, 'utf-8');
+  });
+}
+
+function downloadCSV(filename, content){
+  const blob = new Blob(['﻿'+content], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ============================== XLSX 파서 (외부 라이브러리 없이, ZIP+DOMParser만 사용) ============================== */
+async function inflateRaw(bytes){
+  if(typeof DecompressionStream === 'undefined'){
+    throw new Error('이 브라우저는 xlsx 압축 해제를 지원하지 않습니다. 최신 Chrome/Edge를 사용하거나 CSV로 저장해 업로드해주세요.');
+  }
+  const ds = new DecompressionStream('deflate-raw');
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const ab = await new Response(ds.readable).arrayBuffer();
+  return new Uint8Array(ab);
+}
+
+function readZipEntries(buf){
+  const view = new DataView(buf);
+  const bytes = new Uint8Array(buf);
+  let eocdOffset = -1;
+  const searchStart = Math.max(0, buf.byteLength - 22 - 65557);
+  for(let i = buf.byteLength - 22; i >= searchStart; i--){
+    if(view.getUint32(i, true) === 0x06054b50){ eocdOffset = i; break; }
+  }
+  if(eocdOffset === -1) throw new Error('올바른 xlsx(zip) 파일이 아닙니다.');
+  const cdOffset = view.getUint32(eocdOffset + 16, true);
+  const cdCount = view.getUint16(eocdOffset + 10, true);
+  const entries = {};
+  let ptr = cdOffset;
+  for(let i=0; i<cdCount; i++){
+    const sig = view.getUint32(ptr, true);
+    if(sig !== 0x02014b50) break;
+    const compMethod = view.getUint16(ptr+10, true);
+    const compSize = view.getUint32(ptr+20, true);
+    const nameLen = view.getUint16(ptr+28, true);
+    const extraLen = view.getUint16(ptr+30, true);
+    const commentLen = view.getUint16(ptr+32, true);
+    const localHeaderOffset = view.getUint32(ptr+42, true);
+    const nameBytes = bytes.slice(ptr+46, ptr+46+nameLen);
+    const name = new TextDecoder('utf-8').decode(nameBytes);
+    entries[name] = { compMethod, compSize, localHeaderOffset };
+    ptr += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+
+async function extractZipEntry(buf, entry){
+  const view = new DataView(buf);
+  const bytes = new Uint8Array(buf);
+  const lhOffset = entry.localHeaderOffset;
+  const nameLen = view.getUint16(lhOffset+26, true);
+  const extraLen = view.getUint16(lhOffset+28, true);
+  const dataStart = lhOffset + 30 + nameLen + extraLen;
+  const compBytes = bytes.slice(dataStart, dataStart + entry.compSize);
+  if(entry.compMethod === 0) return compBytes;
+  if(entry.compMethod === 8) return await inflateRaw(compBytes);
+  throw new Error('지원하지 않는 xlsx 압축 방식입니다.');
+}
+
+function colLettersToIndex(letters){
+  let idx = 0;
+  for(let i=0;i<letters.length;i++) idx = idx*26 + (letters.charCodeAt(i) - 64);
+  return idx - 1;
+}
+
+function byLocalName(root, name){
+  // 한글과컴퓨터 HCell 등 일부 프로그램은 <x:row>,<x:c>처럼 네임스페이스 접두사를 붙여 저장한다.
+  // getElementsByTagName('row')는 접두사가 붙으면 매칭되지 않으므로 localName 기준으로 찾는다.
+  return Array.from(root.getElementsByTagName('*')).filter(el => el.localName === name);
+}
+
+function parseSheetXML(xmlText, sharedStrings){
+  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  const rowEls = byLocalName(doc, 'row');
+  return rowEls.map(rowEl=>{
+    const rowArr = [];
+    byLocalName(rowEl, 'c').forEach(c=>{
+      const ref = c.getAttribute('r') || '';
+      const m = ref.match(/^([A-Z]+)(\d+)$/);
+      const colIdx = m ? colLettersToIndex(m[1]) : rowArr.length;
+      const t = c.getAttribute('t');
+      let value = '';
+      if(t === 'inlineStr'){
+        const isEl = byLocalName(c, 'is')[0];
+        value = isEl ? isEl.textContent : '';
+      }else{
+        const vEl = byLocalName(c, 'v')[0];
+        const raw = vEl ? vEl.textContent : '';
+        if(t === 's'){
+          const idx = parseInt(raw,10);
+          value = sharedStrings[idx] !== undefined ? sharedStrings[idx] : '';
+        }else if(t === 'b'){
+          value = raw === '1' ? 'TRUE' : 'FALSE';
+        }else{
+          value = raw;
+        }
+      }
+      while(rowArr.length < colIdx) rowArr.push('');
+      rowArr[colIdx] = value;
+    });
+    return rowArr;
+  });
+}
+
+function arrayRowsToObjectRows(rows){
+  const filtered = rows.filter(r => r.some(x => (x||'').toString().trim() !== ''));
+  if(filtered.length === 0) return {headers:[], rows:[]};
+  const headers = filtered[0].map(h => (h||'').toString().trim());
+  const dataRows = filtered.slice(1).map(r=>{
+    const obj = {};
+    headers.forEach((h,idx)=> obj[h] = (r[idx] !== undefined ? String(r[idx]).trim() : ''));
+    return obj;
+  });
+  return {headers, rows: dataRows};
+}
+
+function findFirstVisibleSheetPath(workbookXml, relsXml){
+  // <x:sheet name="Sheet1" sheetId="1" state="hidden" r:id="rId4"/> 형태 — 접두사(x:) 유무 모두 대응
+  const sheetTags = [...workbookXml.matchAll(/<(?:\w+:)?sheet\s+([^>]*?)\/?>/g)].map(m => m[1]);
+  const sheets = sheetTags.map(attrs => {
+    const hidden = /state\s*=\s*"(hidden|veryHidden)"/.test(attrs);
+    const ridMatch = attrs.match(/r:id\s*=\s*"([^"]*)"/);
+    return { hidden, rid: ridMatch ? ridMatch[1] : null };
+  }).filter(s => s.rid);
+  if(!sheets.length) return null;
+  const chosen = sheets.find(s => !s.hidden) || sheets[0];
+  const relTagMatch = relsXml.match(new RegExp('<Relationship\\b[^>]*\\bId="' + chosen.rid + '"[^>]*/?>'));
+  if(!relTagMatch) return null;
+  const targetMatch = relTagMatch[0].match(/Target="([^"]*)"/);
+  if(!targetMatch) return null;
+  let target = targetMatch[1].replace(/^\.?\//, '');
+  return target.startsWith('xl/') ? target : 'xl/' + target;
+}
+
+async function parseXLSX(arrayBuffer){
+  const entries = readZipEntries(arrayBuffer);
+  const names = Object.keys(entries);
+
+  let sheetName = null;
+  if(entries['xl/workbook.xml'] && entries['xl/_rels/workbook.xml.rels']){
+    try{
+      const wbXml = new TextDecoder('utf-8').decode(await extractZipEntry(arrayBuffer, entries['xl/workbook.xml']));
+      const relsXml = new TextDecoder('utf-8').decode(await extractZipEntry(arrayBuffer, entries['xl/_rels/workbook.xml.rels']));
+      const resolved = findFirstVisibleSheetPath(wbXml, relsXml);
+      if(resolved && entries[resolved]) sheetName = resolved;
+    }catch(e){ /* 아래 대체 로직으로 폴백 */ }
+  }
+  if(!sheetName){
+    sheetName = names.includes('xl/worksheets/sheet1.xml')
+      ? 'xl/worksheets/sheet1.xml'
+      : names.sort().find(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+  }
+  if(!sheetName) throw new Error('시트를 찾을 수 없습니다. 올바른 xlsx 파일인지 확인해주세요.');
+
+  const sheetBytes = await extractZipEntry(arrayBuffer, entries[sheetName]);
+  const sheetXML = new TextDecoder('utf-8').decode(sheetBytes);
+
+  let sharedStrings = [];
+  if(entries['xl/sharedStrings.xml']){
+    const ssBytes = await extractZipEntry(arrayBuffer, entries['xl/sharedStrings.xml']);
+    const ssXML = new TextDecoder('utf-8').decode(ssBytes);
+    const ssDoc = new DOMParser().parseFromString(ssXML, 'application/xml');
+    sharedStrings = byLocalName(ssDoc, 'si').map(si => si.textContent || '');
+  }
+
+  return arrayRowsToObjectRows(parseSheetXML(sheetXML, sharedStrings));
+}
+
+async function parseSpreadsheetFile(file){
+  const name = (file.name || '').toLowerCase();
+  if(name.endsWith('.xlsx')){
+    const buf = await file.arrayBuffer();
+    return parseXLSX(buf);
+  }
+  const text = await readFileAsText(file);
+  return parseCSV(text);
+}
+
+/* ============================== 편제표 처리 ============================== */
+function buildCurriculumMap(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    if(!r['과목명']) return;
+    map.set(r['과목명'], {
+      과목구분: r['과목구분'] || null,
+      학점: r['학점'] ? Number(r['학점']) : null,
+      교과: r['교과'] || null,
+      개설여부: r['개설여부'] || null,
+      학년: r['학년'] || null,
+      학기: r['학기'] || null
+    });
+  });
+  return map;
+}
+
+document.getElementById('btnLoadCurriculum').addEventListener('click', async ()=>{
+  const file = document.getElementById('curriculumFile').files[0];
+  const statusEl = document.getElementById('curriculumStatus');
+  if(!file){ statusEl.innerHTML = '<span style="color:var(--bad)">파일을 선택해주세요.</span>'; return; }
+  statusEl.textContent = '읽는 중...';
+  let headers, rows;
+  try{ ({headers, rows} = await parseSpreadsheetFile(file)); }
+  catch(err){ statusEl.innerHTML = '<span style="color:var(--bad)">파일을 읽지 못했습니다: '+err.message+'</span>'; return; }
+  const required = ['학년','학기','교과','과목명','과목구분','학점'];
+  const missing = required.filter(h=>!headers.includes(h));
+  if(rows.length===0){ statusEl.textContent = '읽은 데이터가 없습니다.'; return; }
+  if(missing.length){ statusEl.innerHTML = '<span style="color:var(--bad)">누락된 열: '+missing.join(', ')+'</span>'; return; }
+  curriculumRows = rows;
+  rebuildIndexes();
+  saveAll();
+  refreshAllViews();
+  statusEl.innerHTML = '<span style="color:var(--good)">편제표 '+rows.length+'행 반영 완료 (과목 '+curriculumMap.size+'개)</span>';
+});
+
+document.getElementById('btnCurriculumTemplate').addEventListener('click', ()=>{
+  downloadCSV('편제표_예시.csv',
+`학년,학기,교과,과목명,과목구분,학점,개설여부,필수/선택
+1,1,국어,공통국어1,공통,4,O,필수
+1,1,수학,공통수학1,공통,4,O,필수
+1,1,영어,공통영어1,공통,4,O,필수
+1,1,사회,한국사,공통,3,O,필수
+1,1,과학,통합과학1,공통,4,O,필수
+1,2,사회,사회와문화,일반선택,3,O,선택
+2,1,수학,미적분1,진로선택,4,O,선택`);
+});
+
+/* ============================== 학생 성적 처리 ============================== */
+const REQUIRED_GRADE_HEADERS = ['학생ID','학년','학기','교과','과목명','학점','석차등급','성취도'];
+
+document.getElementById('btnGradesTemplate').addEventListener('click', ()=>{
+  downloadCSV('학생성적_예시.csv',
+`학생ID,학년,학기,교과,과목명,학점,석차등급,성취도,원점수,과목평균,수강자수,A비율,B비율,C비율
+1,1,1,국어,공통국어1,4,2,B,85,78.2,220,0.35,0.4,0.15
+1,1,1,수학,공통수학1,4,1,A,96,74.5,220,0.32,0.38,0.18
+1,1,1,영어,공통영어1,4,3,C,80,79.0,220,0.3,0.4,0.2
+1,1,1,사회,한국사,3,2,B,,,,,,
+1,1,1,과학,통합과학1,4,2,A,,,,,,
+1,1,2,사회,사회와문화,3,,A,,,,,,`);
+});
+
+document.getElementById('btnSampleData').addEventListener('click', ()=>{
+  curriculumRows = parseCSV(
+`학년,학기,교과,과목명,과목구분,학점,개설여부,필수/선택
+1,1,국어,공통국어1,공통,4,O,필수
+1,1,수학,공통수학1,공통,4,O,필수
+1,1,영어,공통영어1,공통,4,O,필수
+1,1,사회,한국사,공통,3,O,필수
+1,1,과학,통합과학1,공통,4,O,필수
+1,2,사회,사회와문화,일반선택,3,O,선택
+2,1,국어,독서,일반선택,4,O,필수
+2,1,수학,미적분1,진로선택,4,O,선택
+2,1,영어,영어1,일반선택,4,O,필수`).rows;
+
+  gradeRows = parseCSV(
+`학생ID,학년,학기,교과,과목명,학점,석차등급,성취도,원점수,과목평균,수강자수,A비율,B비율,C비율
+샘플1,1,1,국어,공통국어1,4,2,B,85,78.2,220,0.35,0.4,0.15
+샘플1,1,1,수학,공통수학1,4,1,A,96,74.5,220,0.32,0.38,0.18
+샘플1,1,1,영어,공통영어1,4,3,C,80,79.0,220,0.3,0.4,0.2
+샘플1,1,1,사회,한국사,3,2,B,,,,,,
+샘플1,1,1,과학,통합과학1,4,2,A,,,,,,
+샘플1,1,2,사회,사회와문화,3,,A,,,,,,
+샘플2,1,1,국어,공통국어1,4,3,B,78,78.2,220,0.35,0.4,0.15
+샘플2,1,1,수학,공통수학1,4,2,B,82,74.5,220,0.32,0.38,0.18
+샘플2,1,1,영어,공통영어1,4,2,B,84,79.0,220,0.3,0.4,0.2`).rows;
+
+  rebuildIndexes();
+  refreshAllViews();
+
+  showScreen('consult');
+  document.getElementById('studentSelect').value = '샘플1';
+  document.getElementById('mg_국어').value = 2;
+  document.getElementById('mg_수학').value = 1;
+  document.getElementById('mg_영어').value = 3;
+  document.getElementById('mg_사회').value = 2;
+  document.getElementById('mg_과학').value = 3;
+  document.getElementById('mg_한국사').value = 3;
+  renderConsult();
+});
+
+function checkNameLikeIds(){
+  const warnEl = document.getElementById('nameWarning');
+  if(!warnEl) return;
+  const suspects = Array.from(studentsById.keys()).filter(id => /^[가-힣]{2,4}$/.test(id));
+  warnEl.textContent = suspects.length
+    ? '⚠️ 학생ID가 실명으로 보입니다: '+suspects.join(', ')+' — 번호나 별칭 사용을 권장합니다.'
+    : '';
+}
+
+function ingestGradeRows(rows, replace){
+  if(replace) gradeRows = rows;
+  else gradeRows = gradeRows.concat(rows);
+  rebuildIndexes();
+  saveAll();
+  refreshAllViews();
+  checkNameLikeIds();
+}
+
+async function handleGradesLoad(replace){
+  const file = document.getElementById('gradesFile').files[0];
+  const statusEl = document.getElementById('gradesStatus');
+  if(!file){ statusEl.innerHTML = '<div class="err">파일을 선택해주세요.</div>'; return; }
+  statusEl.textContent = '읽는 중...';
+  let headers, rows;
+  try{ ({headers, rows} = await parseSpreadsheetFile(file)); }
+  catch(err){ statusEl.innerHTML = '<div class="err">파일을 읽지 못했습니다: '+err.message+'</div>'; return; }
+  if(rows.length===0){ statusEl.innerHTML = '<div class="err">읽은 데이터가 없습니다.</div>'; return; }
+  const missing = REQUIRED_GRADE_HEADERS.filter(h=>!headers.includes(h));
+  if(missing.length){
+    statusEl.innerHTML = '<div class="err">필수 열 누락: '+missing.join(', ')+'</div>';
+    return;
+  }
+  ingestGradeRows(rows, replace);
+  statusEl.innerHTML = '<div class="ok-msg">'+rows.length+'행 반영 완료 · 전체 학생 '+studentsById.size+'명</div>';
+}
+document.getElementById('btnLoadGrades').addEventListener('click', ()=>handleGradesLoad(false));
+document.getElementById('btnReplaceGrades').addEventListener('click', ()=>handleGradesLoad(true));
+
+function refreshStudentSelect(){
+  const sel = document.getElementById('studentSelect');
+  if(!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '';
+  Array.from(studentsById.keys()).sort().forEach(id=>{
+    const opt = document.createElement('option');
+    opt.value = id; opt.textContent = id;
+    sel.appendChild(opt);
+  });
+  if(Array.from(studentsById.keys()).includes(prev)) sel.value = prev;
+}
+
+function populateUnitSelect(){
+  const sel = document.getElementById('unitSelect');
+  if(!sel || !DB || !DB.recommended_subjects_by_track) return;
+  const byTrack = new Map();
+  DB.recommended_subjects_by_track.units.forEach(u=>{
+    if(!byTrack.has(u.track)) byTrack.set(u.track, []);
+    byTrack.get(u.track).push(u.unit);
+  });
+  sel.innerHTML = '<option value="">선택 안함</option>';
+  byTrack.forEach((units, track)=>{
+    const grp = document.createElement('optgroup');
+    grp.label = track;
+    units.forEach(unit=>{
+      const opt = document.createElement('option');
+      opt.value = unit; opt.textContent = unit;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+}
+
+/* ============================== 수시 지원 카드 (최대 6장, 학종·교과만) ============================== */
+function escAttr(s){
+  return (s||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+function getCurrentCards(){
+  const id = document.getElementById('studentSelect').value;
+  if(!id) return [];
+  if(!applicationCards[id]) applicationCards[id] = [];
+  return applicationCards[id];
+}
+
+function setCurrentCards(cards){
+  const id = document.getElementById('studentSelect').value;
+  if(!id) return;
+  applicationCards[id] = cards;
+  saveAll();
+}
+
+function currentMockGrades(){
+  return {
+    국어: toNum(document.getElementById('mg_국어').value),
+    수학: toNum(document.getElementById('mg_수학').value),
+    영어: toNum(document.getElementById('mg_영어').value),
+    사회: toNum(document.getElementById('mg_사회').value),
+    과학: toNum(document.getElementById('mg_과학').value),
+    한국사: toNum(document.getElementById('mg_한국사').value)
+  };
+}
+
+function formatMethodPct(uni){
+  const parts = [];
+  if(uni.record_pct) parts.push('학생부 '+uni.record_pct+'%');
+  if(uni.attendance_pct) parts.push('출결 '+uni.attendance_pct+'%');
+  if(uni.interview_pct) parts.push('면접 '+uni.interview_pct+'%');
+  if(uni.document_pct) parts.push('서류 '+uni.document_pct+'%');
+  if(parts.length) return parts.join(' + ');
+  if(uni.method_raw) return uni.method_raw;
+  return '반영비율 미확인';
+}
+
+function formatSuneungForCard(uni){
+  const track = document.getElementById('trackSelect').value;
+  const rule = uni.min_suneung ? uni.min_suneung[track] : null;
+  if(!rule) return '없음/미확인';
+  const mockGrades = currentMockGrades();
+  const hasMock = Object.values(mockGrades).some(v=>v!==null);
+  if(!hasMock) return rule+' (모의고사 등급 입력 시 판정)';
+  const opts = {bothScience: BOTH_SCIENCE_UNIVS.has(uni.name.replace(/\(.*\)/,''))};
+  const g = checkSuneungGate(rule, mockGrades, opts);
+  return rule+' '+(g.pass?'✓통과':'✕미충족');
+}
+
+function baseUniversityName(name){
+  // 같은 학교의 서로 다른 전형이 이름에 붙어 있는 경우(국민대(학교장추천1) 등)만 묶는다.
+  // 에리카/천안/세종 등 실제 캠퍼스가 다른 경우는 별개 학교로 그대로 둔다.
+  const m = name.match(/^(.+?)\(([^)]*)\)$/);
+  if(!m) return name;
+  return /학교장추천|지역균형|교과성적우수|학추/.test(m[2]) ? m[1].trim() : name;
+}
+
+function universityDropdownOptions(){
+  const seen = new Set();
+  const opts = [];
+  DB.universities.forEach(u=>{
+    const base = baseUniversityName(u.name);
+    if(!seen.has(base)){ seen.add(base); opts.push(base); }
+  });
+  return opts;
+}
+
+function findUniversityEntriesByBase(name){
+  return DB.universities.filter(u=>baseUniversityName(u.name) === name);
+}
+
+function threeColHtml(a,b,c){
+  return '<div><label>전형</label><div class="hint" style="margin-top:8px">'+a+'</div></div>'
+    + '<div><label>반영요소</label><div class="hint" style="margin-top:8px">'+b+'</div></div>'
+    + '<div><label>수능최저</label><div class="hint" style="margin-top:8px">'+c+'</div></div>';
+}
+
+function cardDerivedHtml(card){
+  if(!card.university) return threeColHtml('-','-','-');
+  const entries = findUniversityEntriesByBase(card.university);
+  if(!entries.length) return threeColHtml('-','DB에 없는 대학','-');
+  if(entries.length === 1){
+    const uni = entries[0];
+    const gradWarn = uni.graduate_ok === false ? ' <span class="pill no">재학생 전용</span>' : '';
+    return threeColHtml(
+      escAttr(uni.jeonhyeong || '(전형명 미확인)')+gradWarn,
+      escAttr(formatMethodPct(uni))+' · ['+uni.score_type+' 반영]',
+      escAttr(formatSuneungForCard(uni))
+    );
+  }
+  const rows = entries.map(uni=>{
+    const gradWarn = uni.graduate_ok === false ? ' <span class="pill no">재학생 전용</span>' : '';
+    return '<tr><td>'+escAttr(uni.jeonhyeong || uni.name)+gradWarn+'</td>'
+      + '<td>'+escAttr(formatMethodPct(uni))+' · ['+uni.score_type+']</td>'
+      + '<td>'+escAttr(formatSuneungForCard(uni))+'</td></tr>';
+  }).join('');
+  return '<div style="flex:1"><label>전형별 반영요소·수능최저 ('+entries.length+'개 전형)</label>'
+    + '<table style="margin-top:6px"><thead><tr><th>전형</th><th>반영요소</th><th>수능최저</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function cardRowHtml(card, idx){
+  const options = '<option value="">선택</option>'
+    + universityDropdownOptions().map(name=>'<option value="'+escAttr(name)+'"'+(name===card.university?' selected':'')+'>'+escAttr(name)+'</option>').join('');
+  return '<div class="cardrow" data-idx="'+idx+'" style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px">'
+    + '<div class="row">'
+    + '<div><label>대학 '+(idx+1)+'</label><select class="card-univ">'+options+'</select></div>'
+    + '<div class="row card-derived" style="flex:3">'+cardDerivedHtml(card)+'</div>'
+    + '</div>'
+    + '<div class="btnbar"><button type="button" class="danger card-del">이 카드 삭제</button></div>'
+    + '</div>';
+}
+
+function renderCardsSection(){
+  const container = document.getElementById('cardsContainer');
+  if(!container) return;
+  const cards = getCurrentCards();
+  container.innerHTML = cards.length
+    ? cards.map((c,i)=>cardRowHtml(c,i)).join('')
+    : '<div class="muted hint">아직 추가된 카드가 없습니다.</div>';
+
+  container.querySelectorAll('.cardrow').forEach(rowEl=>{
+    const idx = Number(rowEl.dataset.idx);
+    rowEl.querySelector('.card-univ').addEventListener('change', e=>{
+      const cards = getCurrentCards();
+      cards[idx].university = e.target.value.trim();
+      setCurrentCards(cards);
+      rowEl.querySelector('.card-derived').innerHTML = cardDerivedHtml(cards[idx]);
+    });
+    rowEl.querySelector('.card-del').addEventListener('click', ()=>{
+      const cards = getCurrentCards(); cards.splice(idx,1); setCurrentCards(cards); renderCardsSection();
+    });
+  });
+
+  const btnAdd = document.getElementById('btnAddCard');
+  if(btnAdd) btnAdd.disabled = cards.length >= 6;
+  renderCardsSummary();
+}
+
+function renderCardsSummary(){
+  const el = document.getElementById('cardsSummary');
+  if(!el) return;
+  const cards = getCurrentCards();
+  el.textContent = '총 '+cards.length+'/6장';
+}
+
+document.getElementById('btnAddCard').addEventListener('click', ()=>{
+  const cards = getCurrentCards();
+  if(cards.length>=6) return;
+  cards.push({university:''});
+  setCurrentCards(cards);
+  renderCardsSection();
+});
+
+function renderCardsReadOnly(){
+  const el = document.getElementById('out_cards');
+  if(!el) return;
+  const cards = getCurrentCards().filter(c=>c.university);
+  if(!cards.length){ el.innerHTML = '<span class="muted">등록된 지원 카드가 없습니다.</span>'; return; }
+  const rows = [];
+  cards.forEach((c,i)=>{
+    const entries = findUniversityEntriesByBase(c.university);
+    if(!entries.length){
+      rows.push('<tr><td>'+(i+1)+'</td><td>'+escAttr(c.university)+'</td><td>-</td><td>DB에 없는 대학</td><td>-</td></tr>');
+      return;
+    }
+    entries.forEach((uni,j)=>{
+      rows.push('<tr><td>'+(j===0 ? (i+1) : '')+'</td><td>'+(j===0 ? escAttr(c.university) : '')+'</td>'
+        + '<td>'+escAttr(uni.jeonhyeong || '-')+'</td><td>'+escAttr(formatMethodPct(uni))+'</td><td>'+escAttr(formatSuneungForCard(uni))+'</td></tr>');
+    });
+  });
+  el.innerHTML = '<table><thead><tr><th>#</th><th>대학</th><th>전형</th><th>반영요소</th><th>수능최저</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+}
+
+/* ============================== 계산 엔진: 등급평균 / 성취도 / 원점수 ============================== */
+function toNum(v){
+  if(v === undefined || v === null || v === '') return null;
+  const n = Number(String(v).replace('%',''));
+  return isNaN(n) ? null : n;
+}
+
+function isGradeExcluded(r, curr){
+  const 과목구분 = curr ? curr.과목구분 : null;
+  const 교과 = r['교과'] || (curr ? curr.교과 : null);
+  if(과목구분 === '융합선택' && (교과 === '사회' || 교과 === '과학'))
+    return '융합선택 사회/과학(석차등급 미산출)';
+  if(교과 === '예체능') return '예체능(석차등급 미산출)';
+  if(/과학탐구실험|교양/.test(r['과목명']||'')) return '과학탐구실험/교양(P)';
+  const n = toNum(r['수강자수']);
+  if(n !== null && n <= 5) return '수강자수 5인 이하';
+  return null;
+}
+
+function computeProfile(records){
+  let creditSum = 0, weightedGradeSum = 0;
+  const achievement = {A:0,B:0,C:0,D:0,E:0};
+  let achievementCreditSum = 0;
+  let rawSum = 0, rawCreditSum = 0;
+  const excluded = [];
+  const perSubject = [];
+
+  records.forEach(r=>{
+    const curr = curriculumMap.get(r['과목명']);
+    const credit = toNum(r['학점']) || 0;
+    const exReason = isGradeExcluded(r, curr);
+    const grade = toNum(r['석차등급']);
+    const achv = (r['성취도']||'').trim().toUpperCase() || null;
+
+    if(exReason){
+      excluded.push({subject:r['과목명'], reason:exReason});
+    }else if(grade !== null && grade >= 1 && grade <= 5){
+      creditSum += credit;
+      weightedGradeSum += credit * grade;
+    }
+
+    if(achv && ['A','B','C','D','E'].includes(achv)){
+      achievement[achv] += credit;
+      achievementCreditSum += credit;
+    }
+
+    const raw = toNum(r['원점수']);
+    if(raw !== null){ rawSum += raw*credit; rawCreditSum += credit; }
+
+    perSubject.push({
+      과목명: r['과목명'], 교과: r['교과']||(curr?curr.교과:null), 학점: credit,
+      석차등급: (!exReason && grade!==null) ? grade : null,
+      성취도: achv, 원점수: raw,
+      A비율: toNum(r['A비율']), B비율: toNum(r['B비율']), C비율: toNum(r['C비율']),
+      excluded: !!exReason
+    });
+  });
+
+  const achievementRatios = {};
+  ['A','B','C','D','E'].forEach(k=> achievementRatios[k] = achievementCreditSum ? achievement[k]/achievementCreditSum : 0);
+
+  let maxGrade = null, maxSemInGrade = null;
+  records.forEach(r=>{
+    const g = toNum(r['학년']), s = toNum(r['학기']);
+    if(g === null) return;
+    if(maxGrade === null || g > maxGrade){ maxGrade = g; maxSemInGrade = s; }
+    else if(g === maxGrade && s !== null && (maxSemInGrade === null || s > maxSemInGrade)){ maxSemInGrade = s; }
+  });
+
+  return {
+    gradeAvg: creditSum ? weightedGradeSum/creditSum : null,
+    creditSum,
+    achievementRatios,
+    rawScoreAvg: rawCreditSum ? rawSum/rawCreditSum : null,
+    excluded,
+    perSubject,
+    currentGrade: maxGrade,
+    currentSemester: maxSemInGrade
+  };
+}
+
+/* ============================== 편제표 기반 잔여 학점 자동 계산 (목표 역산용) ============================== */
+function isCurriculumRowGradable(row){
+  const 과목구분 = row['과목구분'], 교과 = row['교과'];
+  if(과목구분 === '융합선택' && (교과 === '사회' || 교과 === '과학')) return false;
+  if(교과 === '예체능') return false;
+  if(/과학탐구실험|교양/.test(row['과목명']||'')) return false;
+  return true;
+}
+function isCurriculumRowOffered(row){
+  const v = (row['개설여부']||'').trim();
+  if(!v) return true; // 정보 없으면 개설된 것으로 간주
+  return ['O','o','Y','y','예','개설'].includes(v);
+}
+function computeRemainingCredits(rows, currentGrade, currentSemester){
+  if(currentGrade === null || !rows.length) return null;
+  let sum = 0;
+  rows.forEach(r=>{
+    if(!isCurriculumRowGradable(r) || !isCurriculumRowOffered(r)) return;
+    const g = toNum(r['학년']), s = toNum(r['학기']);
+    if(g === null) return;
+    const isFuture = g > currentGrade || (g === currentGrade && currentSemester !== null && s !== null && s > currentSemester);
+    if(isFuture) sum += (toNum(r['학점']) || 0);
+  });
+  return sum;
+}
+
+/* ============================== 목표 등급 역산 (§7.2) ============================== */
+function reverseCalc({totalCredits, targetAvg, completedCredits, currentAvg, remainingCredits}){
+  if(!remainingCredits || remainingCredits <= 0) return {status:'no-input'};
+  const required = (totalCredits*targetAvg - completedCredits*currentAvg) / remainingCredits;
+  if(required < 1.0) return {status:'impossible', required};
+  if(required > 5.0) return {status:'secured', required};
+  const slack = (required - 1.0) * remainingCredits; // grade-point 여유
+  return {status:'ok', required, slack};
+}
+
+/* ============================== 9↔5등급 변환 (§7.6, 선형보간) ============================== */
+function convertGrade(fiveAvg){
+  if(fiveAvg === null || !DB) return null;
+  const rows = DB.conversion_table.rows;
+  if(fiveAvg <= rows[0].five_avg) return {...rows[0]};
+  if(fiveAvg >= rows[rows.length-1].five_avg) return {...rows[rows.length-1]};
+  for(let i=0;i<rows.length-1;i++){
+    const a = rows[i], b = rows[i+1];
+    if(fiveAvg >= a.five_avg && fiveAvg <= b.five_avg){
+      const t = (fiveAvg - a.five_avg) / (b.five_avg - a.five_avg || 1);
+      return {
+        five_avg: fiveAvg,
+        top_pct: a.top_pct + t*(b.top_pct - a.top_pct),
+        nine_avg: a.nine_avg + t*(b.nine_avg - a.nine_avg),
+        estimated: a.estimated || b.estimated
+      };
+    }
+  }
+  return null;
+}
+
+/* ============================== 두 축 진단 (§7.3) ============================== */
+function twoAxisDiagnosis(gradeAvg, aRatio){
+  if(gradeAvg === null) return null;
+  const conv = convertGrade(gradeAvg);
+  if(!conv) return null;
+  const expectedAPct = 100 - conv.top_pct; // 등급 기준 예상 절대비율(휴리스틱)
+  const actualAPct = (aRatio||0) * 100;
+  const gap = actualAPct - expectedAPct;
+  let label;
+  if(gap > 15) label = '갭 큼 — 소인수 진로선택 등으로 등급 손해 가능성. 성취도형 대학이 유리하게 읽힐 수 있음';
+  else if(gap < -15) label = '역갭 — 학교 시험이 어려운 편. 등급형 대학에서 상대적으로 유리할 수 있음';
+  else label = '갭 작음 — 등급과 성취도가 비슷한 수준';
+  return {expectedAPct, actualAPct, gap, label};
+}
+
+/* ============================== 수능최저 파서 (§7.4) ============================== */
+function parseSuneungRule(raw){
+  if(!raw) return null;
+  const alternatives = raw.split(/또는|\//).map(s=>s.trim()).filter(Boolean).map(parseSingleClause);
+  return {alternatives};
+}
+
+function parseSingleClause(clauseRaw){
+  let clause = clauseRaw;
+  let dept = null;
+  const deptMatch = clause.match(/_(약|치|간호)$/);
+  if(deptMatch){ dept = deptMatch[1]; clause = clause.replace(/_(약|치|간호)$/, '').trim(); }
+
+  const segs = clause.split(',').map(s=>s.trim()).filter(Boolean);
+  const mainSeg = segs[0] || '';
+  const extraSegs = segs.slice(1);
+
+  let requiredPrefix = null, count = null, mode = null, value = null;
+  let m = mainSeg.match(/^([가-힣]*)\s*(\d+)\s*(합|개)\s*(\d+)/);
+  if(m){
+    requiredPrefix = m[1] || null;
+    count = parseInt(m[2],10);
+    mode = m[3] === '합' ? 'sum' : 'each';
+    value = parseInt(m[4],10);
+  }
+
+  const extras = extraSegs.map(seg=>{
+    const hm = seg.match(/한(\d+)/);
+    if(hm) return {subject:'한국사', max:parseInt(hm[1],10)};
+    const em = seg.match(/^([가-힣])(\d+)$/);
+    if(em) return {subjectChar: em[1], max: parseInt(em[2],10)};
+    return {raw: seg};
+  });
+
+  return {raw: clauseRaw, dept, requiredPrefix, count, mode, value, extras};
+}
+
+const SUBJECT_CHAR_MAP = {'국':'국어','수':'수학','영':'영어','사':'사회','과':'과학'};
+
+function evaluateClause(clause, mockGrades, opts){
+  opts = opts || {};
+  if(!clause.mode) return {pass:true, na:true, note:'파싱 실패 원문: '+clause.raw};
+
+  const 탐구best = Math.min(mockGrades.사회 ?? 9, mockGrades.과학 ?? 9);
+  const pool = {
+    국어: mockGrades.국어 ?? 9,
+    수학: mockGrades.수학 ?? 9,
+    영어: mockGrades.영어 ?? 9,
+    탐구: 탐구best
+  };
+  if(opts.bothScience){
+    const avg = ((mockGrades.사회 ?? 9) + (mockGrades.과학 ?? 9)) / 2;
+    pool.탐구 = avg;
+  }
+
+  let mandatory = [];
+  if(clause.requiredPrefix === '수') mandatory = ['수학'];
+  else if(clause.requiredPrefix === '국수') mandatory = ['국어','수학'];
+
+  const mandatoryGrades = mandatory.map(k=>pool[k]);
+  const restKeys = Object.keys(pool).filter(k=>!mandatory.includes(k));
+  const restGrades = restKeys.map(k=>pool[k]).sort((a,b)=>a-b);
+  const needMore = Math.max(0, (clause.count||0) - mandatory.length);
+  const chosen = mandatoryGrades.concat(restGrades.slice(0, needMore));
+
+  let pass;
+  if(clause.mode === 'sum') pass = chosen.reduce((a,b)=>a+b,0) <= clause.value;
+  else pass = chosen.every(g=>g <= clause.value);
+
+  const extraFails = [];
+  (clause.extras||[]).forEach(ex=>{
+    if(ex.subject === '한국사'){
+      const h = mockGrades.한국사 ?? 9;
+      if(h > ex.max) extraFails.push('한국사 '+h+'등급 > '+ex.max+'등급');
+    }else if(ex.subjectChar){
+      const name = SUBJECT_CHAR_MAP[ex.subjectChar];
+      const g = name ? (pool[name] ?? mockGrades[name] ?? 9) : null;
+      if(g !== null && g > ex.max) extraFails.push(name+' '+g+'등급 > '+ex.max+'등급');
+    }
+  });
+  if(extraFails.length) pass = false;
+
+  return {pass, chosen, extraFails, clause};
+}
+
+function checkSuneungGate(rawRule, mockGrades, opts){
+  if(!rawRule) return {pass:true, na:true};
+  const parsed = parseSuneungRule(rawRule);
+  const results = parsed.alternatives.map(cl=>evaluateClause(cl, mockGrades, opts));
+  const pass = results.some(r=>r.pass);
+  return {pass, results, na:false};
+}
+
+const BOTH_SCIENCE_UNIVS = new Set(['성균관대','중앙대','동국대','가천대']);
+
+/* ============================== 대학별 환산 (성신여대·덕성여대, §7.7) ============================== */
+function computeSungshin(uni, perSubject){
+  const t = uni.score_table;
+  let creditSum = 0, weighted = 0;
+  const detail = [];
+  perSubject.forEach(s=>{
+    if(s.excluded || !s.석차등급 || !s.성취도) return;
+    const row = t.matrix[s.성취도];
+    if(!row) return;
+    let score = row[String(s.석차등급)];
+    if(score === undefined) return;
+    const ratio = s.성취도 === 'A' ? s.A비율 : s.성취도 === 'B' ? s.B비율 : s.성취도 === 'C' ? s.C비율 : null;
+    let penalized = false;
+    const threshold = t.penalty_rule.thresholds[s.성취도];
+    if(ratio !== null && threshold !== undefined && ratio > threshold){
+      score = score * t.penalty_rule.multiplier;
+      penalized = true;
+    }
+    weighted += score * s.학점;
+    creditSum += s.학점;
+    detail.push({subject:s.과목명, score, penalized});
+  });
+  if(creditSum === 0) return null;
+  return {score: weighted/creditSum, detail};
+}
+
+function computeDuksung(uni, perSubject, isGraduate){
+  const t = uni.score_table;
+  const map = isGraduate ? t.graduate_2015 : t.current_student_2022;
+  let creditSum = 0, weighted = 0;
+  perSubject.forEach(s=>{
+    if(s.excluded) return;
+    let score = null;
+    if(s.석차등급 && map.grade_map[String(s.석차등급)] !== undefined) score = map.grade_map[String(s.석차등급)];
+    else if(s.성취도 && map.achievement_map[s.성취도] !== undefined) score = map.achievement_map[s.성취도];
+    if(score === null) return;
+    weighted += score * s.학점;
+    creditSum += s.학점;
+  });
+  if(creditSum === 0) return null;
+  return {score: weighted/creditSum, cohort: isGraduate ? '졸업생(2015개정)' : '재학생(2022개정)'};
+}
+
+/* ============================== 반 전체 배치 테이블 (§10 step7) ============================== */
+function computeBatchRows(){
+  return Array.from(studentsById.entries()).map(([id, records])=>{
+    const p = computeProfile(records);
+    const conv = convertGrade(p.gradeAvg);
+    const diag = twoAxisDiagnosis(p.gradeAvg, p.achievementRatios.A);
+    return {
+      id, currentGrade: p.currentGrade,
+      gradeAvg: p.gradeAvg, aRatio: p.achievementRatios.A*100,
+      rawAvg: p.rawScoreAvg, topPct: conv ? conv.top_pct : null,
+      gapLabel: diag ? diag.label : '-'
+    };
+  });
+}
+
+function renderBatchTable(){
+  const table = document.getElementById('batchTable');
+  if(!table) return;
+  const filterVal = (document.getElementById('batchFilter').value||'').trim();
+  let rows = computeBatchRows();
+  if(filterVal) rows = rows.filter(r=> r.id.includes(filterVal));
+  rows.sort((a,b)=>{
+    const av = a[batchSort.key], bv = b[batchSort.key];
+    if(av === null && bv === null) return 0;
+    if(av === null) return 1;
+    if(bv === null) return -1;
+    if(typeof av === 'string') return av.localeCompare(bv) * batchSort.dir;
+    return (av - bv) * batchSort.dir;
+  });
+
+  const cols = [
+    {key:'id', label:'학생ID'}, {key:'currentGrade', label:'학년'},
+    {key:'gradeAvg', label:'등급평균'}, {key:'aRatio', label:'A비율%'},
+    {key:'rawAvg', label:'원점수평균'}, {key:'topPct', label:'5등급제 상위%'},
+    {key:'gapLabel', label:'두 축 진단'}, {key:'_action', label:''}
+  ];
+  const thead = table.querySelector('thead');
+  thead.innerHTML = '<tr>' + cols.map(c=>{
+    const sortedCls = c.key===batchSort.key ? ' sorted' : '';
+    return c.key==='_action' ? '<th></th>' : '<th class="'+sortedCls+'" data-key="'+c.key+'">'+c.label+'</th>';
+  }).join('') + '</tr>';
+  thead.querySelectorAll('th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(batchSort.key === key) batchSort.dir *= -1; else { batchSort.key = key; batchSort.dir = 1; }
+      renderBatchTable();
+    });
+  });
+
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = rows.map(r=>{
+    return '<tr>'
+      + '<td>'+r.id+'</td>'
+      + '<td>'+(r.currentGrade ?? '-')+'</td>'
+      + '<td>'+(r.gradeAvg!==null ? r.gradeAvg.toFixed(2) : '-')+'</td>'
+      + '<td>'+r.aRatio.toFixed(0)+'</td>'
+      + '<td>'+(r.rawAvg!==null ? r.rawAvg.toFixed(1) : '-')+'</td>'
+      + '<td>'+(r.topPct!==null ? r.topPct.toFixed(2) : '-')+'</td>'
+      + '<td>'+r.gapLabel+'</td>'
+      + '<td><button class="secondary batch-consult-btn" data-id="'+r.id+'">상담</button></td>'
+      + '</tr>';
+  }).join('') || '<tr><td colspan="8" class="muted">학생 데이터가 없습니다.</td></tr>';
+
+  tbody.querySelectorAll('.batch-consult-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      showScreen('consult');
+      document.getElementById('studentSelect').value = btn.dataset.id;
+      renderConsult();
+    });
+  });
+}
+document.getElementById('batchFilter').addEventListener('input', renderBatchTable);
+
+/* ============================== 학교 통계 화면 (§6.4) ============================== */
+function renderStatsTable(){
+  const tbody = document.querySelector('#statsTable tbody');
+  if(!tbody) return;
+  const bySubject = new Map();
+  gradeRows.forEach(r=>{
+    const key = r['과목명'];
+    if(!key) return;
+    if(!bySubject.has(key)) bySubject.set(key, {교과:r['교과']||'', credits:{A:0,B:0,C:0,D:0,E:0}, total:0});
+    const entry = bySubject.get(key);
+    const credit = toNum(r['학점']) || 0;
+    const achv = (r['성취도']||'').trim().toUpperCase();
+    if(['A','B','C','D','E'].includes(achv)){
+      entry.credits[achv] += credit;
+      entry.total += credit;
+    }
+  });
+  const rows = Array.from(bySubject.entries()).sort((a,b)=>a[0].localeCompare(b[0]));
+  tbody.innerHTML = rows.map(([name, e])=>{
+    const pct = k => e.total ? (e.credits[k]/e.total*100).toFixed(1) : '-';
+    return '<tr><td>'+name+'</td><td>'+e.교과+'</td><td>'+e.total+'</td>'
+      + '<td>'+pct('A')+'</td><td>'+pct('B')+'</td><td>'+pct('C')+'</td><td>'+pct('D')+'</td><td>'+pct('E')+'</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="muted">성적 데이터가 없습니다.</td></tr>';
+}
+
+/* ============================== 모집단위별 권장과목 진단 (§6.1 고1) ============================== */
+function normalizeSubjectName(s){
+  return (s||'').replace(/Ⅰ/g,'1').replace(/Ⅱ/g,'2').replace(/Ⅲ/g,'3').replace(/II/g,'2').replace(/I/g,'1').replace(/\s+/g,'').toLowerCase();
+}
+
+function renderUnitSubjectDiagnosis(unitName){
+  const data = DB.recommended_subjects_by_track;
+  const unitData = data.units.find(u=>u.unit===unitName);
+  if(!unitData) return '';
+  const freq = {};
+  unitData.recommendations.forEach(r=>{ r.subjects.forEach(s=>{ freq[s] = (freq[s]||0)+1; }); });
+  const ranked = Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  const totalUnivs = unitData.recommendations.length;
+
+  const curriculumEntries = Array.from(curriculumMap.entries());
+  function findOffered(subjectName){
+    if(!curriculumRows.length) return 'unknown';
+    const norm = normalizeSubjectName(subjectName);
+    const match = curriculumEntries.find(([name]) => {
+      const n = normalizeSubjectName(name);
+      return n === norm || n.includes(norm) || norm.includes(n);
+    });
+    if(!match) return 'notfound';
+    const offerVal = (match[1].개설여부 || '').trim();
+    const offered = !offerVal || ['O','o','Y','y','예','개설'].includes(offerVal);
+    return offered ? 'offered' : 'notoffered';
+  }
+
+  const rows = ranked.map(([subject,count])=>{
+    const status = findOffered(subject);
+    const statusHtml = status==='unknown' ? '<span class="muted">편제표 없음</span>'
+      : status==='notfound' ? '<span class="muted">학교 편제표에서 과목명 확인 필요</span>'
+      : status==='offered' ? '<span class="pill ok">개설</span>'
+      : '<span class="pill no">미개설 → 공동교육과정·온라인 대체 확인</span>';
+    return '<tr><td>'+subject+'</td><td>'+count+'/'+totalUnivs+'개교</td><td>'+statusHtml+'</td></tr>';
+  }).join('');
+
+  return '<div style="margin-top:10px"><b>"'+unitName+'" ('+unitData.track+'계열) 지원 시 대학들이 권장하는 과목 — 대교협 자료 '+totalUnivs+'개교 기준</b>'
+    + '<div class="hint">⁎ 표시 대학은 필수 지정이 아니라 진로·적성에 맞게 권장하는 정도입니다. "대표 모집단위" 16개 기준이라 실제 지원 학과와 정확히 일치하지 않을 수 있습니다.</div>'
+    + '<table style="margin-top:6px"><thead><tr><th>과목</th><th>권장 대학 수</th><th>우리 학교 개설</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+/* ============================== 개별 상담 화면 렌더링 (§8.2, 학년별 분기 §6) ============================== */
+document.getElementById('btnRender').addEventListener('click', renderConsult);
+document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+
+function renderConsult(){
+  if(!DB){ alert('전형 데이터 로드에 실패했습니다. 페이지를 새로고침해주세요.'); return; }
+  const id = document.getElementById('studentSelect').value;
+  if(!id){ alert('먼저 "① 성적입력"에서 학생 성적 파일을 업로드해주세요.'); return; }
+  const records = studentsById.get(id) || [];
+  if(!records.length){ alert('선택한 학생('+id+')의 성적 데이터를 찾을 수 없습니다.'); return; }
+  const track = document.getElementById('trackSelect').value;
+  const isGraduate = document.getElementById('graduateSim').value === '1';
+  const viewMode = document.getElementById('viewMode').value; // teacher | student
+  const absence = Number(document.getElementById('absenceCount').value)||0;
+
+  const mockGrades = {
+    국어: toNum(document.getElementById('mg_국어').value),
+    수학: toNum(document.getElementById('mg_수학').value),
+    영어: toNum(document.getElementById('mg_영어').value),
+    사회: toNum(document.getElementById('mg_사회').value),
+    과학: toNum(document.getElementById('mg_과학').value),
+    한국사: toNum(document.getElementById('mg_한국사').value)
+  };
+  const hasMock = Object.values(mockGrades).some(v=>v!==null);
+
+  const profile = computeProfile(records);
+  const conv = convertGrade(profile.gradeAvg);
+  const diag = twoAxisDiagnosis(profile.gradeAvg, profile.achievementRatios.A);
+  const gradeOverride = document.getElementById('gradeSelect').value;
+  const grade = gradeOverride === 'auto' ? profile.currentGrade : Number(gradeOverride); // 1,2,3 또는 null
+
+  document.getElementById('consultSheet').style.display = 'block';
+
+  // 헤더
+  document.getElementById('out_id').textContent = '[학생 '+id+'] '+track+'계열';
+  const lastRec = records[records.length-1] || {};
+  document.getElementById('out_summary').textContent =
+    (lastRec['학년']||'-')+'학년 '+(lastRec['학기']||'-')+'학기까지 누적'
+    + (isGraduate ? ' · 졸업생(재수) 시뮬레이션' : '')
+    + (gradeOverride !== 'auto' ? ' · 학년 수동 선택: 고'+gradeOverride : '');
+  document.getElementById('out_gradeavg').textContent =
+    (profile.gradeAvg!==null ? '등급평균 '+profile.gradeAvg.toFixed(2) : '등급평균 산출불가')
+    + ' · A비율 '+(profile.achievementRatios.A*100).toFixed(0)+'%'
+    + (profile.rawScoreAvg!==null ? ' · 원점수평균 '+profile.rawScoreAvg.toFixed(1) : '');
+  document.getElementById('out_conv').textContent = conv
+    ? '9등급 환산 '+conv.nine_avg.toFixed(2)+' 수준 (상위 '+conv.top_pct.toFixed(2)+'%)'+(conv.estimated?' *예상치':'')
+    : '변환표 적용 불가(등급평균 없음)';
+
+  // ===== 학년별 뷰 분기 (§10 step9) =====
+  const g1box = document.getElementById('out_grade1box');
+  const g2box = document.getElementById('out_grade2box');
+  g1box.style.display = 'none'; g2box.style.display = 'none';
+
+  if(grade === 1){
+    g1box.style.display = 'block';
+    const notOffered = curriculumRows.filter(r =>
+      (r['과목구분']==='진로선택' || r['과목구분']==='융합선택') &&
+      r['개설여부'] && !['O','o','Y','y','예','개설'].includes(r['개설여부'].trim())
+    );
+    const selectedUnit = document.getElementById('unitSelect').value;
+    document.getElementById('out_grade1_content').innerHTML =
+      '<div><b>출결 경고:</b> 미인정 지각·결석은 2~3학년에서 되돌릴 수 없습니다. 교과·종합·정시 전부 반영이 확대됩니다.</div>'
+      + '<div style="margin-top:6px"><b>과목 선택 진단:</b> '
+      + (curriculumRows.length===0
+          ? '편제표가 없어 진단할 수 없습니다(① 성적입력에서 업로드).'
+          : (notOffered.length
+              ? '미개설 진로·융합선택 과목 '+notOffered.length+'개: '+notOffered.map(r=>r['과목명']).join(', ')+' → 공동교육과정·온라인 대체 확인 필요'
+              : '편제표상 진로·융합선택 과목은 모두 개설되어 있습니다.'))
+      + '</div>'
+      + '<div style="margin-top:6px" class="hint">1~2학기 성적만으로는 대학별 정밀 판정이 무의미합니다. 아래 ③ 대학별 판정은 참고용으로만 보세요.</div>'
+      + (selectedUnit ? renderUnitSubjectDiagnosis(selectedUnit) : '');
+  }else if(grade === 2){
+    g2box.style.display = 'block';
+    document.getElementById('out_grade2_content').innerHTML = diag
+      ? ('<div>등급 기준 예상 절대비율 '+diag.expectedAPct.toFixed(1)+'% vs 실제 A비율 '+diag.actualAPct.toFixed(1)+'% (갭 '+diag.gap.toFixed(1)+'%p)</div>'
+         + '<div style="margin-top:4px"><b>'+diag.label+'</b></div>')
+      : '<div class="muted">등급평균이 없어 두 축 진단을 계산할 수 없습니다.</div>';
+  }
+
+  // ① 수능최저 게이트
+  const gateEl = document.getElementById('out_gate');
+  gateEl.innerHTML = '';
+  if(!hasMock){
+    gateEl.innerHTML = '<span class="muted">모의고사 등급이 입력되지 않아 게이트를 계산하지 않습니다.</span>';
+  }else{
+    DB.universities.forEach(u=>{
+      const rule = u.min_suneung ? u.min_suneung[track] : null;
+      if(!rule) return;
+      const opts = {bothScience: BOTH_SCIENCE_UNIVS.has(u.name.replace(/\(.*\)/,''))};
+      const g = checkSuneungGate(rule, mockGrades, opts);
+      const div = document.createElement('div');
+      div.className = 'gateitem';
+      div.innerHTML = '<b>'+u.name+'</b><br><span class="hint">'+rule+'</span><br>'
+        + '<span class="pill '+(g.pass?'ok':'no')+'">'+(g.pass?'통과':'미충족')+'</span>';
+      gateEl.appendChild(div);
+    });
+  }
+
+  // ② 지원 가능 여부
+  const eligEl = document.getElementById('out_eligibility');
+  const blocked = DB.universities.filter(u=> isGraduate && u.graduate_ok === false);
+  eligEl.innerHTML = isGraduate
+    ? ('<div>재학생 전용 전형 <b>'+blocked.length+'개</b> 지원 불가: '
+       + (blocked.map(u=>u.name).join(', ')||'없음') + '</div>')
+    : '<div>재학생 전용 전형: 지원 가능 (재수 시 위 대학들 지원 불가로 전환됨 — 상단 재수 시뮬레이션 토글 참고)</div>';
+
+  // ③ 대학별 판정
+  const preciseEl = document.getElementById('out_univ_precise');
+  const bandEl = document.getElementById('out_univ_band');
+  preciseEl.innerHTML = ''; bandEl.innerHTML = '';
+
+  DB.universities.forEach(u=>{
+    if(isGraduate && u.graduate_ok === false) return;
+    const rule = u.min_suneung ? u.min_suneung[track] : null;
+    const gate = hasMock && rule ? checkSuneungGate(rule, mockGrades, {bothScience: BOTH_SCIENCE_UNIVS.has(u.name.replace(/\(.*\)/,''))}) : {pass:true, na:!rule};
+
+    if(u.score_table && u.score_table.type === 'matrix_grade_achievement'){
+      const r = computeSungshin(u, profile.perSubject);
+      const div = document.createElement('div');
+      div.className = 'univcard';
+      div.innerHTML = '<span class="name">'+u.name+'</span>'
+        + '<span class="score">'+(r ? r.score.toFixed(2) : '산출불가')+'</span>'
+        + '<div class="note">환산표 적용(등급×성취도 매트릭스)'
+        + (r && r.detail.some(d=>d.penalized) ? ' · A/B/C비율 초과로 일부 과목 감점(×0.999) 반영' : '')
+        + (rule ? ' · 최저 '+rule+' '+(gate.pass?'통과':'미충족') : '') + '</div>';
+      preciseEl.appendChild(div);
+    }else if(u.score_table && u.score_table.type === 'grade_or_achievement_by_cohort'){
+      const r = computeDuksung(u, profile.perSubject, isGraduate);
+      const div = document.createElement('div');
+      div.className = 'univcard';
+      div.innerHTML = '<span class="name">'+u.name+'</span>'
+        + '<span class="score">'+(r ? r.score.toFixed(2) : '산출불가')+'</span>'
+        + '<div class="note">환산표 적용 · '+(r?r.cohort:'')
+        + ' · 동일 등급이어도 재학생이 졸업생보다 높게 환산됨'
+        + (rule ? ' · 최저 '+rule+' '+(gate.pass?'통과':'미충족') : '') + '</div>';
+      preciseEl.appendChild(div);
+    }else{
+      let extra = '';
+      if(diag && viewMode === 'teacher'){
+        if(u.score_type === '성취도' && diag.gap > 15) extra = ' → 등급보다 유리하게 읽힐 가능성';
+        if(u.score_type === '등급' && diag.gap > 15) extra = ' → 여기서는 A비율 높은 것을 반영하지 않음';
+      }
+      const outcomesNote = (u.outcomes_unusable && viewMode === 'teacher') ? ' · ⚠️입결활용불가('+u.note+')' : (u.outcomes_unusable ? ' · ⚠️입결활용불가' : '');
+      const div = document.createElement('div');
+      div.className = 'univcard';
+      div.innerHTML = '<span class="name">'+u.name+'</span>'
+        + '<span class="score">['+u.score_type+' 반영]</span>'
+        + '<div class="note">'
+        + (rule ? '최저 '+rule+' '+(gate.pass?'✓통과':'✕미충족') : '최저 없음/미확인')
+        + (u.attendance_pct ? ' · 출결 '+u.attendance_pct+'%' : '')
+        + outcomesNote
+        + extra + '</div>';
+      bandEl.appendChild(div);
+    }
+  });
+
+  // ④ 수시 지원 카드
+  renderCardsSection();
+  renderCardsReadOnly();
+
+  // ⑤ 목표 역산 — 편제표 기준 자동 계산 (수동 입력 없음)
+  const reverseEl = document.getElementById('out_reverse');
+  if(!curriculumRows.length){
+    reverseEl.innerHTML = '<span class="muted">편제표를 업로드하면 남은 학점을 자동으로 계산해 목표 역산을 보여줍니다 (① 성적입력 화면 상단 "교육과정 편제표 업로드").</span>';
+  }else if(profile.gradeAvg === null){
+    reverseEl.innerHTML = '<span class="muted">등급평균을 산출할 수 있는 과목이 없어 역산할 수 없습니다.</span>';
+  }else{
+    const remainingCredits = computeRemainingCredits(curriculumRows, profile.currentGrade, profile.currentSemester);
+    if(!remainingCredits || remainingCredits <= 0){
+      reverseEl.innerHTML = '<span class="muted">편제표 기준으로 앞으로 남은 등급산출 대상 과목이 없습니다 (마지막 학기이거나 편제표에 향후 학기 정보가 없음).</span>';
+    }else{
+      const totalCredits = profile.creditSum + remainingCredits;
+      const targets = [1.0,1.3,1.5,1.8,2.0,2.3,2.5,3.0,3.5,4.0];
+      let rows = '';
+      targets.forEach(t=>{
+        const rc = reverseCalc({totalCredits, targetAvg:t, completedCredits: profile.creditSum, currentAvg: profile.gradeAvg, remainingCredits});
+        let cell;
+        if(rc.status === 'impossible') cell = '<span class="pill no">산술적으로 불가</span>';
+        else if(rc.status === 'secured') cell = '<span class="pill ok">이미 확보</span>';
+        else cell = '필요평균 <b>'+rc.required.toFixed(2)+'</b> <span class="hint">(여유 약 '+rc.slack.toFixed(1)+'학점 — 3학점 과목 기준 약 '+(rc.slack/3).toFixed(1)+'개, 4학점 과목 기준 약 '+(rc.slack/4).toFixed(1)+'개까지 2등급 허용)</span>';
+        rows += '<tr><td>'+t.toFixed(1)+'</td><td>'+cell+'</td></tr>';
+      });
+      reverseEl.innerHTML =
+        '<div class="hint" style="margin-bottom:8px">편제표 자동 계산: 기이수 '+profile.creditSum+'학점(등급 '+profile.gradeAvg.toFixed(2)+') + 남은 '+remainingCredits+'학점 = 목표 시점 총 '+totalCredits+'학점</div>'
+        + '<table><thead><tr><th>목표 평균</th><th>남은 학기 동안 필요한 평균</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    }
+  }
+
+  document.getElementById('out_absence').textContent = absence;
+
+  const remEl = document.getElementById('out_reminders');
+  remEl.innerHTML = DB.tone_reminders.map(t=>'<li>'+t+'</li>').join('');
+
+  document.getElementById('out_date').textContent = new Date().toLocaleDateString('ko-KR');
+}
+
+/* ============================== 탭 네비게이션 ============================== */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.screen===name));
+}
+document.querySelectorAll('.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>showScreen(btn.dataset.screen));
+});
+
+document.getElementById('studentSelect').addEventListener('change', renderCardsSection);
+
+/* ============================== 초기화 ============================== */
+loadFromStorage();
+refreshAllViews();
+populateUnitSelect();
+renderCardsSection();
+</script>
